@@ -1,0 +1,44 @@
+# dsc.iamonline.co.za — PC1864 Menu Map (static HTML/CSS/JS, no backend).
+# nginx serves the files in src/ directly from disk.
+#
+# Install on the server:
+#   mkdir -p /var/www/dsc.iamonline.co.za
+#   cp -r src/. /var/www/dsc.iamonline.co.za/
+#   cp dsc.iamonline.co.za /etc/nginx/sites-available/
+#   ln -s /etc/nginx/sites-available/dsc.iamonline.co.za /etc/nginx/sites-enabled/
+#   nginx -t && systemctl reload nginx
+#
+# TLS: run `certbot --nginx -d dsc.iamonline.co.za` — certbot rewrites
+# this file in place (adds the 443 block and the HTTP→HTTPS redirect).
+#
+# Updating later: copy src/ over again. No reload needed for file changes.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name dsc.iamonline.co.za;
+
+    root /var/www/dsc.iamonline.co.za;
+    index index.html;
+    charset utf-8;
+
+    # The app only loads its own files plus Google Fonts.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    location / {
+        try_files $uri $uri/ =404;
+
+        # File names are not fingerprinted, so make browsers revalidate
+        # (cheap 304s via ETag) and pick up a new copy right after a deploy.
+        # `expires` sets Cache-Control without an add_header here, so the
+        # server-level security headers above still apply.
+        expires -1;
+    }
+
+    # Nothing in this site should be a dotfile (.git, .env, ...).
+    location ~ /\. {
+        deny all;
+    }
+}

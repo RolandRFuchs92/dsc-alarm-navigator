@@ -276,3 +276,4 @@ td.num, th.num { font-family: var(--font-mono); font-variant-numeric: tabular-nu
   font-family: var(--font-mono); font-size: 0.86rem; border: 0; background: none; color: var(--accent); cursor: pointer; padding: 1px 2px; text-decoration: underline; text-underline-offset: 2px;
 }
 td.num .meaning { white-space: normal; font-family: var(--font-body); min-width: 14ch; }
+.search-empty { padding: 8px; }

@@ -1092,7 +1092,7 @@
     searchActive = 0;
     if (!searchHits.length) {
       els.results.hidden = !els.search.value.trim();
-      els.results.innerHTML = els.search.value.trim() ? '<p class="picker-label" style="padding:8px">No match. Try a number like 013 or a word like chime.</p>' : '';
+      els.results.innerHTML = els.search.value.trim() ? '<p class="picker-label search-empty">No match. Try a number like 013 or a word like chime.</p>' : '';
       return;
     }
     els.results.hidden = false;
