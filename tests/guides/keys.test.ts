@@ -31,6 +31,21 @@ describe("parseKeys", () => {
   });
 });
 
+describe("prototype keys are not tokens", () => {
+  it.each(["constructor", "__proto__", "toString", "hasOwnProperty"])("parseKeys and formatKeycaps reject %s", (token) => {
+    for (const run of [() => parseKeys(token, model), () => formatKeycaps(token)]) {
+      let caught: unknown = null;
+      try {
+        run();
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(KeyTokenError);
+      expect((caught as KeyTokenError).token).toBe(token);
+    }
+  });
+});
+
 describe("formatKeycaps", () => {
   it("labels placeholders and keeps plain keys", () => {
     expect(formatKeycaps("* 8 {installer}")).toEqual([

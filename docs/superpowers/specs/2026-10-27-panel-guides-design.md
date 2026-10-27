@@ -166,7 +166,7 @@ The example adds partition 2 using zones 9–16. All sections already exist in t
 |---|---|---|---|---|
 | 1 | Enter installer programming | `* 8 {installer}` | Armed light on = waiting for a section number. | — |
 | 2 | Turn the partition on | `2 0 1 2 #` | Toggle 2 shows on the display. Partition 1 is always on. | 201 |
-| 3 | Give it zones 9–16 | `2 1 1 1 2 3 4 5 6 7 8 #` | [210]–[217] are partition 2's zone sections; [211] = zones 9–16. | 202 (range, resolves [211]) |
+| 3 | Give it zones 9–16 | `2 1 1 1 2 3 4 5 6 7 8 #` | [210]–[217] are partition 2's zone sections; [211] = zones 9–16. | 211 |
 | 4 | Check partition 1 still has zones 9–16 | `2 0 3 #` | Look at options 1–8: any that are ON are zones 9–16 still on partition 1. Press that number to turn it off, then press #. Warning: a zone left on both partitions only arms when both are armed. | 203 |
 | 5 | Check the zone types | `0 0 1 #` | View only: zones 9–16 are in [001]. Set types if they've never been used. | 1 |
 | 6 | Set entry/exit delays | `0 0 5 0 2 0 3 0 0 4 5 1 2 0 #` | Sub-section [02] = partition 2: Entry 1, Entry 2, Exit (defaults 030/045/120). | 5 |
