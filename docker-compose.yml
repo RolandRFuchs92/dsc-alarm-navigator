@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # 5433/5434 are taken by other projects on this machine.
+      - "5435:5432"
+    volumes:
+      - dsc_pgdata:/var/lib/postgresql/data
+      - ./docker/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql:ro
+
+volumes:
+  dsc_pgdata:

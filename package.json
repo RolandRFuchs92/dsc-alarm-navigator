@@ -1,0 +1,34 @@
+{
+  "name": "dsc-alarm-navigator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node scripts/tern.mjs migrate",
+    "db:migrate:test": "node scripts/tern.mjs --test migrate",
+    "db:rollback": "node scripts/tern.mjs migrate -d -1",
+    "db:status": "node scripts/tern.mjs status",
+    "db:new": "node scripts/tern.mjs new"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "drizzle-orm": "^0.45.4",
+    "next": "^16.4.3",
+    "pg": "^8.23.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}
