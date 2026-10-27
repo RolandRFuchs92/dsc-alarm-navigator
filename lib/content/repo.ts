@@ -24,6 +24,7 @@ import {
   stringListSchema,
   subsSchema,
 } from "./schemas";
+import { findSection } from "./find-section";
 import type { KeypadCommandDef, KeypadModelDef, PanelModelData, SectionDef } from "./types";
 
 export type GuideSummary = { slug: string; title: string; summary: string; danger: boolean; verified: boolean };
@@ -161,13 +162,6 @@ async function loadPanelModel(slug: string): Promise<PanelModelData | null> {
 const getPanelModel = cache(loadPanelModel);
 
 // Exact num match first, then the section whose range contains num.
-function findSection(model: PanelModelData, num: number): SectionDef | null {
-  const all = model.groups.flatMap((g) => g.sections);
-  const exact = all.find((s) => s.num === num);
-  const result = exact ?? all.find((s) => s.range !== null && num >= s.range[0] && num <= s.range[1]) ?? null;
-  return result;
-}
-
 async function findModelId(slug: string): Promise<number | null> {
   const [row] = await db.select({ id: panelModel.id }).from(panelModel).where(eq(panelModel.slug, slug));
   const result = row?.id ?? null;
