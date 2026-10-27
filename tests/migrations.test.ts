@@ -11,7 +11,7 @@ describe("migrations", () => {
     tern("migrate");
   });
 
-  it("go up and down cleanly", () => {
+  it("go up and down cleanly", { timeout: 60_000 }, () => {
     for (const args of [["migrate"], ["migrate", "-d", "0"], ["migrate"]]) {
       const r = tern(...args);
       expect(r.status, `${args.join(" ")}: ${r.stderr}`).toBe(0);

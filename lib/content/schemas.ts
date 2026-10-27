@@ -17,6 +17,7 @@ export const optionSchema = z.object({
   on: z.string(),
   off: z.string(),
   def: z.boolean(),
+  future: z.boolean().optional(),
 });
 export const optionsSchema = z.array(optionSchema);
 
@@ -29,7 +30,6 @@ export const subSchema = z.object({
 export const subsSchema = z.array(subSchema);
 
 export const stringListSchema = z.array(z.string());
-export const numberListSchema = z.array(z.number().int());
 
 // Template lists generated from the rule variables; {k} runs 1..count and the
 // text may use {i}, {group}, {first}, {last} and arithmetic such as {first + k - 1}.

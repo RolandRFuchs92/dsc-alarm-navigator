@@ -8,7 +8,7 @@ import type {
 export type SectionKind = "data" | "toggle" | "sub" | "phone" | "action" | "module";
 
 export type EntryDef = { label: string; digits: number; def?: string; lookup?: string; note?: string; variable?: boolean };
-export type OptionDef = { n: number; on: string; off: string; def: boolean };
+export type OptionDef = { n: number; on: string; off: string; def: boolean; future?: boolean };
 export type SubDef = { code: string; label: string; entries?: EntryDef[]; options?: OptionDef[] };
 
 export type EntryTemplate = z.infer<typeof entryTemplateSchema>;
@@ -41,7 +41,7 @@ export type SectionDef = {
   subs: SubDef[] | null;
   tips: string[];
   related: string[];
-  pages: number[];
+  pages: number;
   confirm: boolean;
   danger: boolean;
   verified: boolean;

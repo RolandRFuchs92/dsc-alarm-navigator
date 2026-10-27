@@ -72,7 +72,7 @@ CREATE TABLE section (
 	subs jsonb,
 	tips jsonb NOT NULL DEFAULT '[]',
 	related jsonb NOT NULL DEFAULT '[]',
-	pages jsonb NOT NULL DEFAULT '[]',
+	pages integer NOT NULL DEFAULT 1,
 	confirm boolean NOT NULL DEFAULT false,
 	danger boolean NOT NULL DEFAULT false,
 	verified boolean NOT NULL DEFAULT true,

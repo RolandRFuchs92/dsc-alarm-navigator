@@ -150,7 +150,7 @@ export const section = pgTable(
     subs: jsonb("subs").$type<SubDef[] | null>(),
     tips: jsonb("tips").$type<string[]>().notNull().default([]),
     related: jsonb("related").$type<string[]>().notNull().default([]),
-    pages: jsonb("pages").$type<number[]>().notNull().default([]),
+    pages: integer("pages").notNull().default(1),
     confirm: boolean("confirm").notNull().default(false),
     danger: boolean("danger").notNull().default(false),
     verified: boolean("verified").notNull().default(true),

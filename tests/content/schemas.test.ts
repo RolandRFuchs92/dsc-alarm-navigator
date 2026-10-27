@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ruleSchema } from "@/lib/content/schemas";
+import { optionsSchema, ruleSchema } from "@/lib/content/schemas";
 
 describe("ruleSchema", () => {
   it("rejects an unknown rule kind", () => {
@@ -26,5 +26,12 @@ describe("ruleSchema", () => {
         defaultWhen: { n: 202 },
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("optionsSchema", () => {
+  it("keeps the future flag", () => {
+    const opts = [{ n: 10, on: "For future use", off: "", def: false, future: true }];
+    expect(optionsSchema.parse(opts)).toEqual(opts);
   });
 });
