@@ -31,13 +31,18 @@ export const subsSchema = z.array(subSchema);
 
 export const stringListSchema = z.array(z.string());
 
-// Template lists generated from the rule variables; {k} runs 1..count and the
-// text may use {i}, {group}, {first}, {last} and arithmetic such as {first + k - 1}.
+// Template lists generated from the rule variables. Text substitutes plain variable
+// names only: {i}, {group}, {first}, {last}, and per item {k} (1..count) and {item}
+// (= first + k - 1). count defaults to last - first + 1 (1 for offset rules).
+// "labels" gives one entry per fixed label (e.g. days) instead of label + count;
+// "defByItem" overrides def for a given {item} number.
 export const entryTemplateSchema = z.object({
-  count: z.number().int().positive(),
-  label: z.string(),
+  count: z.number().int().positive().optional(),
+  label: z.string().optional(),
+  labels: z.array(z.string()).optional(),
   digits: z.number().int(),
   def: z.string().optional(),
+  defByItem: z.record(z.string(), z.string()).optional(),
   lookup: z.string().optional(),
   note: z.string().optional(),
 });
