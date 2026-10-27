@@ -46,7 +46,7 @@ export function readLcd(state: DscState): [string, string] {
   return result;
 }
 
-/* ---------- legacy oracle: src/app.js state machine run headless in a vm ---------- */
+/* ---------- legacy oracle: the retired site's app.js (frozen in tests/fixtures/legacy) run headless in a vm ---------- */
 
 export type LegacySnapshot = {
   lcd: [string, string];
@@ -73,8 +73,8 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..",
 
 // Keep app.js up to its DOM rendering section, stub render(), and hand the closure's functions back.
 function buildLegacyScript(): vm.Script {
-  const data = fs.readFileSync(path.join(root, "src", "data.js"), "utf8");
-  const app = fs.readFileSync(path.join(root, "src", "app.js"), "utf8");
+  const data = fs.readFileSync(path.join(root, "tests", "fixtures", "legacy", "data.js"), "utf8");
+  const app = fs.readFileSync(path.join(root, "tests", "fixtures", "legacy", "app.js"), "utf8");
   const cut = app.indexOf("/* ---------- rendering ---------- */");
   if (cut < 0) throw new Error("app.js rendering marker not found");
   const head = app.slice(0, cut);

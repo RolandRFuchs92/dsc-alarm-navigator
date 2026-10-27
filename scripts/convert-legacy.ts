@@ -1,5 +1,7 @@
-// Converts the legacy src/data.js menu map into PanelModelData and renders it as the
-// body of migrations/003_content_pc1864.sql.
+// One-off: converted the legacy static site's menu map (src/data.js, since retired) into
+// PanelModelData and rendered it as the body of migrations/003_content_pc1864.sql.
+// Its input is now a frozen fixture, tests/fixtures/legacy/data.js, kept so the parity
+// test can keep checking the migration against it. New content goes in new migrations.
 // Usage: npx tsx scripts/convert-legacy.ts > migrations/003_content_pc1864.sql
 import fs from "node:fs";
 import path from "node:path";
@@ -17,7 +19,7 @@ import type {
 
 type Json = Record<string, unknown>;
 
-// One section node as written in src/data.js (functions only on range sections).
+// One section node as written in the legacy data.js (functions only on range sections).
 export type LegacyNode = {
   id: string;
   num?: number;
@@ -54,10 +56,10 @@ export type LegacyData = {
   LOOKUPS: Record<string, unknown>;
 };
 
-// Evaluate our own src/data.js in a bare vm context (build time only, never on user input).
+// Evaluate the frozen legacy data.js fixture in a bare vm context (build time only, never on user input).
 // Top-level consts are not context properties, so a trailing expression hands them back.
 export function loadLegacyData(): LegacyData {
-  const file = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "data.js");
+  const file = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tests", "fixtures", "legacy", "data.js");
   const source = `${fs.readFileSync(file, "utf8")}\n;({ INSTALLER_GROUPS, KEYPAD_COMMANDS, LOOKUPS })`;
   const result = vm.runInNewContext(source, {}) as LegacyData;
   return result;

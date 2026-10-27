@@ -1,0 +1,22 @@
+# Only what `next build` needs goes into the build context. Never secrets.
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+node_modules
+.next
+.superpowers
+docs
+tests
+test-results
+playwright-report
+src
+migrations
+docker
+docker-compose.yml
+*.tsbuildinfo
+dsc.iamonline.co.za
+README.md
+Dockerfile
+.dockerignore

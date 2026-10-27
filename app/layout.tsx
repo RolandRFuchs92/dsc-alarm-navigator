@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import { Barlow, Barlow_Condensed, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -24,7 +25,10 @@ export const metadata: Metadata = {
   description: "Menu maps and programming guides for DSC alarm panels",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+// Reading the request makes every page render per request, so each one gets the nonce that
+// proxy.ts put in the CSP header (a page prerendered at build time would carry no nonce).
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  await headers();
   const fonts = `${barlow.variable} ${barlowCondensed.variable} ${shareTechMono.variable}`;
   return (
     <html lang="en" className={fonts}>

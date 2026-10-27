@@ -9,6 +9,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.{ts,tsx}"],
+    // Playwright owns tests/e2e (run against the Docker image with `npx playwright test`).
+    exclude: ["tests/e2e/**", "node_modules/**"],
     setupFiles: ["./tests/setup.ts"],
     // All DB tests share the dsc_test database, so files run one at a time.
     fileParallelism: false,

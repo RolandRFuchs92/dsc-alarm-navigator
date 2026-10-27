@@ -25,7 +25,7 @@ function runBoth(steps: Step[]): void {
   expect(normalizeNoEntryArmed(ours, legacy, flags)).toEqual(legacy);
 }
 
-// Tree and link navigation (no key press) matches src/app.js too.
+// Tree and link navigation (no key press) matches the legacy app.js too.
 describe("dsc-powerseries navigation helpers", () => {
   it("jumps to sections, range members, sub-sections and entries", () => {
     runBoth([node("s202", 211), key("2"), node("s005"), sub("02"), entry(2), sub("05"), node("s001"), lookup("05"), entry(15), lookup("07")]);

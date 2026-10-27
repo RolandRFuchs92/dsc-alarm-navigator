@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeNoEntryArmed, parseKeys, runEngineFlagged, runLegacy } from "./helpers";
 import type { Key } from "@/lib/engines/types";
 
-// Differential test: src/app.js (run headless) is the oracle. Every key press must give the same
+// Differential test: the legacy app.js (run headless) is the oracle. Every key press must give the same
 // LCD lines, LEDs, crumbs, waiting text and error state.
 const SCRIPTS = [
   "* 8 5 5 5 5 0 0 1 0 3 0 4 < > 1 # #",
@@ -51,7 +51,7 @@ function buildFuzzKeys(seed: number): Key[] {
   return result;
 }
 
-describe("dsc-powerseries engine matches src/app.js", () => {
+describe("dsc-powerseries engine matches the legacy app.js", () => {
   it.each(SCRIPTS)("script: %s", (script) => {
     const keys = parseKeys(script);
     const legacy = runLegacy(keys);
