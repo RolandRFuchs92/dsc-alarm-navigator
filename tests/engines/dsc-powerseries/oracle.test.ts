@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseKeys, runEngine, runLegacy } from "./helpers";
+import { normalizeNoEntryArmed, parseKeys, runEngine, runLegacy } from "./helpers";
 import type { Key } from "@/lib/engines/types";
 
 // Differential test: src/app.js (run headless) is the oracle. Every key press must give the same
@@ -54,14 +54,15 @@ function buildFuzzKeys(seed: number): Key[] {
 describe("dsc-powerseries engine matches src/app.js", () => {
   it.each(SCRIPTS)("script: %s", (script) => {
     const keys = parseKeys(script);
-    expect(runEngine(keys)).toEqual(runLegacy(keys));
+    const legacy = runLegacy(keys);
+    expect(normalizeNoEntryArmed(runEngine(keys), legacy)).toEqual(legacy);
   });
 
   it("fuzz: 400 seeded random key walks", () => {
     for (let seed = 1; seed <= 400; seed += 1) {
       const keys = buildFuzzKeys(seed);
       const legacy = runLegacy(keys);
-      const ours = runEngine(keys);
+      const ours = normalizeNoEntryArmed(runEngine(keys), legacy);
       ours.forEach((snap, i) => {
         expect(snap, `seed ${seed}, after ${keys.slice(0, i).join(" ")}`).toEqual(legacy[i]);
       });

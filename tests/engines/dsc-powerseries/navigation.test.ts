@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { applyLookupValue, navigateToEntry, navigateToNode, navigateToSub } from "@/lib/engines/dsc-powerseries";
 import type { DscState } from "@/lib/engines/dsc-powerseries";
 import type { Key } from "@/lib/engines/types";
-import { engine, freezeDeep, model, runLegacySteps, snapshotEngine } from "./helpers";
+import { engine, freezeDeep, model, normalizeNoEntryArmed, runLegacySteps, snapshotEngine } from "./helpers";
 
 type Step = { legacy: Parameters<typeof runLegacySteps>[0][number]; ours: (s: DscState) => DscState };
 
@@ -20,7 +20,7 @@ function runBoth(steps: Step[]): void {
     state = s.ours(freezeDeep(state));
     ours.push(snapshotEngine(state));
   });
-  expect(ours).toEqual(legacy);
+  expect(normalizeNoEntryArmed(ours, legacy)).toEqual(legacy);
 }
 
 // Tree and link navigation (no key press) matches src/app.js too.

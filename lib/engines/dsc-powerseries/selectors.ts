@@ -24,9 +24,11 @@ import type { DscState, FoundNode, Mode } from "./state";
 export function selectLeds(state: DscState): Leds {
   const installerWaiting = ["section", "module", "action", "confirm"].includes(state.mode);
   const dataModes = ["sub", "data", "phone", "toggle"].includes(state.mode);
-  const armed = installerWaiting || (state.mode === "toggle" && state.page === 2) || (state.mode === "info" && state.nodeId === "k9");
+  const armed = installerWaiting || (state.mode === "toggle" && state.page === 2);
+  // [*][9] no-entry arming: install guide p.7 says the Armed light FLASHES (legacy showed it steady).
+  const noEntryArmed = state.mode === "info" && state.nodeId === "k9";
   const ready: LedState = dataModes && state.hex ? "flash" : installerWaiting ? "off" : "on";
-  const result: Leds = { ready, armed: armed ? "on" : "off", trouble: "off", ac: "on" };
+  const result: Leds = { ready, armed: noEntryArmed ? "flash" : armed ? "on" : "off", trouble: "off", ac: "on" };
   return result;
 }
 
@@ -148,7 +150,7 @@ function readCurrentDigit(state: DscState, section: SectionDef): string {
 }
 
 /* Zone lights for an LED keypad. Only what install guide §3.3 p.8-9 describes is verified: toggle sections page 1
-   (light n = option n) and the binary digit of a data section. Everything else is all off and unverified. */
+   (light n = option n) and the programmed digit of a data section while nothing is being typed. Everything else is all off and unverified. */
 function computeLights(state: DscState, model: PanelModelData, keypad: KeypadModelDef): Display {
   if (keypad.lightCount === null) throw new Error(`Keypad ${keypad.slug} is a lights keypad with no lightCount`);
   const count = keypad.lightCount;
@@ -163,7 +165,8 @@ function computeLights(state: DscState, model: PanelModelData, keypad: KeypadMod
     const lit = BINARY_DIGIT_LIGHTS[digit];
     if (lit) {
       on = lit.filter((n) => n <= count);
-      verified = true;
+      // §3.3.4 only describes the programmed digit shown on entering; a typed buffer is not described.
+      verified = !state.buffer;
     }
   }
   const result: Display = { type: "lights", count, lights: buildLights(count, on), verified };

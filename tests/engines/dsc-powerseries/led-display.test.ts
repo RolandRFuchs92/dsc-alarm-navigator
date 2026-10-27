@@ -41,11 +41,12 @@ describe("LED keypad display", () => {
     expect(state.mode).toBe("data");
     expect(listOn(readLights(state))).toEqual(BINARY_DIGIT_LIGHTS["3"]);
     expect(listOn(readLights(state))).toEqual([1, 2]);
+    expect(readLights(state).verified).toBe(false); // typed buffer: §3.3.4 does not describe echo
     const hex = pressKeys("* 8 5 5 5 5 0 0 1 * 1", engine.createInitialState(model));
     expect(hex.buffer).toBe("A");
     const display = readLights(hex);
     expect(listOn(display)).toEqual([2, 4]);
-    expect(display.verified).toBe(true);
+    expect(display.verified).toBe(false);
   });
 
   it("data section with no typed digit shows the default value's first digit", () => {
@@ -56,6 +57,7 @@ describe("LED keypad display", () => {
     expect(display.verified).toBe(true);
     const saved = pressKeys("5", state); // buffer "5" -> lights 1 and 3
     expect(listOn(readLights(saved))).toEqual([1, 3]);
+    expect(readLights(saved).verified).toBe(false);
   });
 
   it("half-typed section number is unverified and all lights off", () => {

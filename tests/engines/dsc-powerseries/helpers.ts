@@ -151,3 +151,12 @@ export function runEngine(keys: Key[]): LegacySnapshot[] {
   });
   return result;
 }
+
+// The one deliberate exception: install guide p.7 — legacy showed steady. After [*][9][code] the guide says the
+// Armed light FLASHES; the engine does, legacy had it ON. Only that exact pair is normalised.
+export function normalizeNoEntryArmed(ours: LegacySnapshot[], legacy: LegacySnapshot[]): LegacySnapshot[] {
+  const result = ours.map((snap, i) => (snap.leds.armed === "flash" && legacy[i].leds.armed === "on"
+    ? { ...snap, leds: { ...snap.leds, armed: "on" } }
+    : snap));
+  return result;
+}

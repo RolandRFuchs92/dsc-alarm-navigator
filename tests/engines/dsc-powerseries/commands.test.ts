@@ -90,7 +90,7 @@ describe("dsc-powerseries user-mode commands", () => {
   it("[*][9][user] no-entry arming lights Armed", () => {
     const state = pressKeys("* 9 1 2 3 4");
     expect(readLcd(state)).toEqual(["No-entry arming", "Armed, no entry"]);
-    expect(engine.selectLeds(state).armed).toBe("on");
+    expect(engine.selectLeds(state).armed).toBe("flash"); // install guide p.7
     expect(readLcd(pressKeys("#", state))).toEqual(["System is Ready", "Enter code  <>"]);
   });
 

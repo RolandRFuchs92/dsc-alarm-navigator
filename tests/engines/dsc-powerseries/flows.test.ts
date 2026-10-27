@@ -88,6 +88,12 @@ describe("dsc-powerseries programming flows", () => {
     expect(engine.selectLeds(state).armed).toBe("on");
   });
 
+  it("[*][9][code] no-entry arming flashes the Armed light (install guide p.7)", () => {
+    const state = pressKeys("* 9 1 2 3 4");
+    expect(state.mode).toBe("info");
+    expect(engine.selectLeds(state).armed).toBe("flash");
+  });
+
   it('[211] location reads "Partition 2, zones 9-16"', () => {
     const state = pressKeys(`${INSTALLER} 2 1 1`);
     const location = engine.selectLocation(state, model);
