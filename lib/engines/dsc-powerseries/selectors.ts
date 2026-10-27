@@ -108,15 +108,71 @@ export function computeLcd(state: DscState, model: PanelModelData): [string, str
   return result;
 }
 
-// LED and icon keypads: an all-off placeholder until Task 9 ports the install guide's light rules.
-export function selectDisplay(state: DscState, model: PanelModelData, keypad: KeypadModelDef): Display {
-  if (keypad.displayType === "lights") {
-    const count = keypad.lightCount ?? 8;
-    const lights: Record<number, LedState> = {};
-    for (let i = 1; i <= count; i += 1) lights[i] = "off";
-    const result: Display = { type: "lights", count, lights, verified: false };
-    return result;
+/* ---------- LED keypad lights ---------- */
+
+// Binary digit chart: digit or HEX letter -> which zone lights are ON.
+// DSC 29007359R003 v4.2 install guide §3.3.4 p.9 (Viewing Programming): Zone 1 = 1, Zone 2 = 2, Zone 3 = 4, Zone 4 = 8.
+// HEX A-F are entered with [*][1]-[*][6] (§3.3.2) and show as 10-15.
+export const BINARY_DIGIT_LIGHTS: Record<string, number[]> = {
+  "0": [],
+  "1": [1],
+  "2": [2],
+  "3": [1, 2],
+  "4": [3],
+  "5": [1, 3],
+  "6": [2, 3],
+  "7": [1, 2, 3],
+  "8": [4],
+  "9": [1, 4],
+  A: [2, 4],
+  B: [1, 2, 4],
+  C: [3, 4],
+  D: [1, 3, 4],
+  E: [2, 3, 4],
+  F: [1, 2, 3, 4],
+};
+
+function buildLights(count: number, on: number[]): Record<number, LedState> {
+  const result: Record<number, LedState> = {};
+  for (let i = 1; i <= count; i += 1) result[i] = on.includes(i) ? "on" : "off";
+  return result;
+}
+
+// The digit a data section shows: the first digit of the current entry, typed buffer first, else saved or default value.
+function readCurrentDigit(state: DscState, section: SectionDef): string {
+  const entries = readEntries(section, state.section ?? 0, findSub(section, state.subCode));
+  const entry = entries[state.entryIndex];
+  const saved = state.values[readValueKey(state.section, state.subCode, state.entryIndex)] || entry?.def || "";
+  const result = (state.buffer || saved).charAt(0).toUpperCase();
+  return result;
+}
+
+/* Zone lights for an LED keypad. Only what install guide §3.3 p.8-9 describes is verified: toggle sections page 1
+   (light n = option n) and the binary digit of a data section. Everything else is all off and unverified. */
+function computeLights(state: DscState, model: PanelModelData, keypad: KeypadModelDef): Display {
+  if (keypad.lightCount === null) throw new Error(`Keypad ${keypad.slug} is a lights keypad with no lightCount`);
+  const count = keypad.lightCount;
+  const section = readSection(state, model);
+  let on: number[] = [];
+  let verified = false;
+  if (state.mode === "toggle" && section && state.page === 1) {
+    on = readToggleSet(state, section, state.section ?? 0).filter((n) => n >= 1 && n <= 8 && n <= count);
+    verified = true;
+  } else if ((state.mode === "data" || state.mode === "phone") && section) {
+    const digit = readCurrentDigit(state, section);
+    const lit = BINARY_DIGIT_LIGHTS[digit];
+    if (lit) {
+      on = lit.filter((n) => n <= count);
+      verified = true;
+    }
   }
+  const result: Display = { type: "lights", count, lights: buildLights(count, on), verified };
+  return result;
+}
+
+// LED keypads follow the install guide; icon keypads stay an unverified placeholder.
+export function selectDisplay(state: DscState, model: PanelModelData, keypad: KeypadModelDef): Display {
+  if (keypad.displayType === "lights") return computeLights(state, model, keypad);
   if (keypad.displayType === "icons") {
     const result: Display = { type: "icons", on: [], verified: false };
     return result;
