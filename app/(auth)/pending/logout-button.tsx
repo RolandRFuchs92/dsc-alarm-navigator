@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import styles from "./pending.module.css";
 import { authClient } from "@/lib/auth/auth-client";
 
 export function LogoutButton() {
@@ -13,7 +14,7 @@ export function LogoutButton() {
   }
 
   return (
-    <button type="button" onClick={logout} style={{ width: "100%", minHeight: 48, fontSize: 16, marginTop: 20 }}>
+    <button type="button" onClick={logout} className={styles.button}>
       Log out
     </button>
   );

@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { listUsers } from "@/lib/auth/users";
+import styles from "./page.module.css";
 import { approveUser, revokeUser } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +14,10 @@ export default async function AdminUsersPage() {
   await requireAdmin();
   const users = await listUsers();
   return (
-    <main style={{ padding: "16px" }}>
+    <main className={styles.main}>
       <h1>Users</h1>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div className={styles.scroll}>
+        <table className={styles.table}>
           <thead>
             <tr>
               <th align="left">Email</th>
@@ -28,19 +29,19 @@ export default async function AdminUsersPage() {
           <tbody>
             {users.map((u) => (
               <tr key={u.id}>
-                <td style={{ wordBreak: "break-all" }}>{u.email}</td>
+                <td className={styles.email}>{u.email}</td>
                 <td>{u.createdAt.toISOString().slice(0, 10)}</td>
                 <td>{pickStatus(u)}</td>
                 <td>
                   {u.isAdmin ? null : u.approved ? (
                     <form action={revokeUser}>
                       <input type="hidden" name="userId" value={u.id} />
-                      <button type="submit" style={{ minHeight: 44 }}>Revoke</button>
+                      <button type="submit" className={styles.button}>Revoke</button>
                     </form>
                   ) : (
                     <form action={approveUser}>
                       <input type="hidden" name="userId" value={u.id} />
-                      <button type="submit" style={{ minHeight: 44 }}>Approve</button>
+                      <button type="submit" className={styles.button}>Approve</button>
                     </form>
                   )}
                 </td>

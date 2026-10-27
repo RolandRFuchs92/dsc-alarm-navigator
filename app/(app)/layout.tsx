@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./layout.module.css";
 import type { ReactNode } from "react";
 import { requireApprovedUser } from "@/lib/auth/guards";
 
@@ -7,7 +8,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const current = await requireApprovedUser();
   return (
     <>
-      <header style={{ display: "flex", gap: 16, padding: "12px 16px" }}>
+      <header className={styles.header}>
         <Link href="/">Home</Link>
         {current.isAdmin ? <Link href="/admin/users">Admin</Link> : null}
       </header>

@@ -1,0 +1,5 @@
+.main { padding: 16px; }
+.scroll { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.email { word-break: break-all; }
+.button { min-height: 44px; }
