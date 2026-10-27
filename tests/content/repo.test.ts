@@ -23,9 +23,9 @@ describe("content repository", () => {
     expect(findSection(model, 211)?.slug).toBe("s202");
   });
 
-  it("findSection(model, 998) returns null", async () => {
+  it("findSection(model, 1000) returns null", async () => {
     const model = (await getPanelModel("pc1864"))!;
-    expect(findSection(model, 998)).toBeNull();
+    expect(findSection(model, 1000)).toBeNull();
   });
 
   it("saveKeypadChoice rejects a keypad not offered for the model", async () => {
