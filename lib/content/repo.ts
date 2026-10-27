@@ -227,4 +227,21 @@ async function saveKeypadChoice(userId: string, modelSlug: string, keypadSlug: s
     });
 }
 
-export { listPanelModels, getPanelModel, findSection, listGuides, getGuide, getKeypadChoice, saveKeypadChoice };
+// The user's saved keypad for this model, else the model's default, else its first keypad.
+// Map and guide pages both call this so they always draw the same keypad.
+async function getChosenKeypad(userId: string, model: PanelModelData): Promise<KeypadModelDef> {
+  const chosen = await getKeypadChoice(userId, model.slug);
+  const result = model.keypads.find((k) => k.slug === chosen) ?? model.keypads.find((k) => k.isDefault) ?? model.keypads[0];
+  return result;
+}
+
+export {
+  listPanelModels,
+  getPanelModel,
+  findSection,
+  listGuides,
+  getGuide,
+  getKeypadChoice,
+  saveKeypadChoice,
+  getChosenKeypad,
+};

@@ -8,7 +8,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     setupFiles: ["./tests/setup.ts"],
     // All DB tests share the dsc_test database, so files run one at a time.
     fileParallelism: false,

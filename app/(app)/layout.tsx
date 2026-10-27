@@ -10,6 +10,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <>
       <header className={styles.header}>
         <Link href="/">Home</Link>
+        <Link href="/devices">Panels</Link>
         {current.isAdmin ? <Link href="/admin/users">Admin</Link> : null}
       </header>
       {children}

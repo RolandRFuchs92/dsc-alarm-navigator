@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Barlow, Barlow_Condensed, Share_Tech_Mono } from "next/font/google";
+import "./globals.css";
 
 const barlow = Barlow({
   subsets: ["latin"],
