@@ -44,6 +44,7 @@ function buildEntries(rule: NonNullable<SectionDef["rule"]>, vars: Vars): EntryD
     const def = t.defByItem?.[String(item)] ?? t.def;
     if (def !== undefined) entry.def = def;
     if (t.lookup !== undefined) entry.lookup = t.lookup;
+    if (t.variable !== undefined) entry.variable = t.variable;
     if (t.note !== undefined) entry.note = fillTemplate(t.note, itemVars);
     result.push(entry);
   }
@@ -75,6 +76,9 @@ export function resolveRangeSection(
   const vars = computeVars(rule, n);
   // Fixed labels win over a describe template.
   const text = rule.labels ? (rule.labels[n - rule.start] ?? "") : fillTemplate(rule.describe ?? "", vars);
-  const result = { describe: text, entries: buildEntries(rule, vars), options: buildOptions(rule, vars, n) };
+  // Without a template, the section's static lists apply unchanged (they don't depend on n).
+  const entries = rule.entries ? buildEntries(rule, vars) : (section.entries ?? []);
+  const options = rule.options ? buildOptions(rule, vars, n) : (section.options ?? []);
+  const result = { describe: text, entries, options };
   return result;
 }

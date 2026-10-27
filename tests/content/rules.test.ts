@@ -78,4 +78,29 @@ describe("resolveRangeSection", () => {
     expect(() => resolveRangeSection(s, 180)).toThrow(RangeError);
     expect(() => resolveRangeSection(s, 189)).toThrow(RangeError);
   });
+
+  it("describe-only rule returns static options and entries verbatim", () => {
+    const s = makeSection([351, 358], { kind: "offset", start: 351, base: 1, describe: "Partition {i}" });
+    s.options = [
+      { n: 1, on: "Number 1", off: "", def: true },
+      { n: 6, on: "For future use", off: "", def: false, future: true },
+    ];
+    s.entries = [{ label: "Account", digits: 4 }];
+    for (let n = 351; n <= 358; n += 1) {
+      const r = resolveRangeSection(s, n);
+      expect(r.options).toEqual(s.options);
+      expect(r.entries).toEqual(s.entries);
+    }
+    const bare = makeSection([351, 358], { kind: "offset", start: 351, base: 1, describe: "P {i}" });
+    expect(resolveRangeSection(bare, 351)).toMatchObject({ entries: [], options: [] });
+  });
+
+  it("copies variable onto built entries and omits it otherwise", () => {
+    const s = makeSection([301, 303], {
+      kind: "offset", start: 301, base: 1, entries: { label: "Phone number", digits: 32, variable: true },
+    });
+    expect(resolveRangeSection(s, 301).entries).toEqual([{ label: "Phone number", digits: 32, variable: true }]);
+    const t = makeSection([301, 303], { kind: "offset", start: 301, base: 1, entries: { label: "X", digits: 2 } });
+    expect("variable" in resolveRangeSection(t, 301).entries[0]).toBe(false);
+  });
 });

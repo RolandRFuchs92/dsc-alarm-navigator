@@ -45,6 +45,7 @@ export const entryTemplateSchema = z.object({
   defByItem: z.record(z.string(), z.string()).optional(),
   lookup: z.string().optional(),
   note: z.string().optional(),
+  variable: z.boolean().optional(),
 });
 export const optionTemplateSchema = z.object({
   count: z.number().int().positive(),
