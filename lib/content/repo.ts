@@ -161,7 +161,6 @@ async function loadPanelModel(slug: string): Promise<PanelModelData | null> {
 // Per-request memo inside Next; a passthrough elsewhere (vitest).
 const getPanelModel = cache(loadPanelModel);
 
-// Exact num match first, then the section whose range contains num.
 async function findModelId(slug: string): Promise<number | null> {
   const [row] = await db.select({ id: panelModel.id }).from(panelModel).where(eq(panelModel.slug, slug));
   const result = row?.id ?? null;

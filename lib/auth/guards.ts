@@ -9,12 +9,13 @@ type AppUser = { id: string; email: string; name: string; approved: boolean; isA
 
 // Look up the session, then re-read the gate flags from the DB every call so
 // a revoke takes effect on the next request (session user fields may be cached).
-async function loadAppUser(): Promise<AppUser> {
+// Never redirects: null means no session (or the user row is gone).
+async function findAppUser(): Promise<AppUser | null> {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/login");
+  if (!session) return null;
   const rows = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
   const row = rows[0];
-  if (!row) redirect("/login");
+  if (!row) return null;
   const result: AppUser = {
     id: row.id,
     email: row.email,
@@ -22,6 +23,12 @@ async function loadAppUser(): Promise<AppUser> {
     approved: row.approved,
     isAdmin: row.isAdmin,
   };
+  return result;
+}
+
+async function loadAppUser(): Promise<AppUser> {
+  const result = await findAppUser();
+  if (!result) redirect("/login");
   return result;
 }
 
@@ -37,5 +44,5 @@ async function requireAdmin(): Promise<AppUser> {
   return result;
 }
 
-export { requireApprovedUser, requireAdmin };
+export { findAppUser, requireApprovedUser, requireAdmin };
 export type { AppUser };

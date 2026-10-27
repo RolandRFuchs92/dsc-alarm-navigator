@@ -24,6 +24,14 @@ beforeEach(async () => {
 });
 
 describe("users", () => {
+  it("promoteToAdmin and resetPassword trim and lowercase the email", async () => {
+    await signUp("foo@example.com");
+    await promoteToAdmin(" Foo@Example.com ");
+    const rows = await db.select().from(user).where(eq(user.email, "foo@example.com"));
+    expect(rows[0].isAdmin).toBe(true);
+    await expect(resetPassword(" FOO@example.com ", "another-long-password")).resolves.toBeUndefined();
+  });
+
   it("promoteToAdmin sets approved and isAdmin", async () => {
     const created = await signUp("a@example.com");
     expect(created.approved).toBe(false);

@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-const { requireApprovedUser, requireAdmin } = await import("@/lib/auth/guards");
+const { findAppUser, requireApprovedUser, requireAdmin } = await import("@/lib/auth/guards");
 
 async function setFlags(email: string, flags: { approved?: boolean; isAdmin?: boolean }) {
   await db.update(user).set(flags).where(eq(user.email, email));
@@ -30,6 +30,17 @@ beforeEach(async () => {
 });
 
 describe("guards", () => {
+  it("findAppUser returns null with no session and never redirects", async () => {
+    await expect(findAppUser()).resolves.toBeNull();
+  });
+
+  it("findAppUser reads the approved flag from the DB", async () => {
+    mocks.cookie = await createSessionCookie("f@example.com", "correct-horse-battery");
+    expect((await findAppUser())?.approved).toBe(false);
+    await setFlags("f@example.com", { approved: true });
+    expect((await findAppUser())?.approved).toBe(true);
+  });
+
   it("redirects to /login with no session", async () => {
     await expect(requireApprovedUser()).rejects.toThrow("REDIRECT:/login");
   });

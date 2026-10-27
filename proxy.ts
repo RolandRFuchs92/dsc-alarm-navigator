@@ -6,12 +6,16 @@ const PUBLIC_PREFIXES = ["/login", "/signup", "/pending", "/api/health", "/api/a
 // Strict CSP with a fresh nonce per request. Next reads the nonce back from the request's
 // CSP header and stamps it on its own inline scripts. Fonts are self-hosted by next/font.
 // `next dev` alone also needs 'unsafe-eval' (React's dev tooling); production never gets it.
+// Dev styles: browsers ignore 'unsafe-inline' when a nonce sits in the same directive, which
+// would block Next's dev overlay styles, so development uses 'unsafe-inline' with no style nonce.
 function buildCsp(nonce: string): string {
-  const devEval = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
+  const isDev = process.env.NODE_ENV === "development";
+  const devEval = isDev ? " 'unsafe-eval'" : "";
+  const styleSrc = isDev ? "style-src 'self' 'unsafe-inline'" : `style-src 'self' 'nonce-${nonce}'`;
   const result = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${devEval}`,
-    `style-src 'self' 'nonce-${nonce}'`,
+    styleSrc,
     "img-src 'self' data:",
     "font-src 'self'",
     "connect-src 'self'",
@@ -41,4 +45,4 @@ function proxy(request: NextRequest) {
 
 export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
 
-export { proxy };
+export { proxy, buildCsp };

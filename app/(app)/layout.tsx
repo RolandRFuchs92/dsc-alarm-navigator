@@ -1,5 +1,6 @@
 import Link from "next/link";
 import styles from "./layout.module.css";
+import { LogoutButton } from "@/components/LogoutButton";
 import type { ReactNode } from "react";
 import { requireApprovedUser } from "@/lib/auth/guards";
 
@@ -12,6 +13,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <Link href="/">Home</Link>
         <Link href="/devices">Panels</Link>
         {current.isAdmin ? <Link href="/admin/users">Admin</Link> : null}
+        <LogoutButton />
       </header>
       {children}
     </>

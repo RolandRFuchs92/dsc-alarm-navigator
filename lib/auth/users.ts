@@ -20,7 +20,8 @@ class CannotRevokeAdminError extends Error {
 type UserRow = { id: string; email: string; createdAt: Date; approved: boolean; isAdmin: boolean };
 
 // Approve + make admin in one step; used by the seed script.
-async function promoteToAdmin(email: string): Promise<void> {
+async function promoteToAdmin(rawEmail: string): Promise<void> {
+  const email = rawEmail.trim().toLowerCase(); // better-auth stores lowercased emails
   const rows = await db
     .update(user)
     .set({ approved: true, isAdmin: true })
@@ -53,7 +54,8 @@ async function listUsers(): Promise<UserRow[]> {
 }
 
 // Hash with better-auth's own hasher so signInEmail verifies the result.
-async function resetPassword(email: string, newPassword: string): Promise<void> {
+async function resetPassword(rawEmail: string, newPassword: string): Promise<void> {
+  const email = rawEmail.trim().toLowerCase(); // better-auth stores lowercased emails
   const rows = await db.select({ id: user.id }).from(user).where(eq(user.email, email)).limit(1);
   if (!rows[0]) throw new UserNotFoundError(email);
   const ctx = await auth.$context;

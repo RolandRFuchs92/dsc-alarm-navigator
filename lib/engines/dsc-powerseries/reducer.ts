@@ -133,6 +133,7 @@ const PROGRAMMING_HANDLERS: Record<string, Handler> = {
     const section = readSection(state, model)!;
     const entries = readEntries(section, state.section ?? 0, findSub(section, state.subCode));
     if (key === "#") return leaveData(state, model);
+    if (entries.length === 0) return { ...state, beep: "error" };
     if (key === "*") return { ...state, hex: !state.hex };
     if (key === "<") return { ...state, entryIndex: Math.max(0, state.entryIndex - 1), buffer: "" };
     if (key === ">") return { ...state, entryIndex: Math.min(entries.length - 1, state.entryIndex + 1), buffer: "" };

@@ -121,14 +121,20 @@ must point at the server before certbot runs.
 
 ```bash
 docker exec -it <postgres-container> psql -U postgres \
-  -c "CREATE ROLE dsc LOGIN PASSWORD '<password>'" \
+  -c "CREATE ROLE dsc LOGIN" \
   -c "CREATE DATABASE dsc OWNER dsc"
+docker exec -it <postgres-container> psql -U postgres
+# then, at the psql prompt (the password never lands in shell history or the process list):
+#   \password dsc
 ```
 
 **2. Migrate.** Migrations never run when the container starts. Run them by hand from a checkout
-of this repo, with the production URL in the environment (it overrides `.env`):
+of this repo. Install dependencies first, dev dependencies included (so no `NODE_ENV=production`);
+`db:migrate` and `seed:admin` need dotenv and tsx. Then run with the production URL in the
+environment (it overrides `.env`):
 
 ```bash
+npm ci
 DATABASE_URL='postgres://dsc:<password>@<host>:<port>/dsc' npm run db:migrate
 ```
 

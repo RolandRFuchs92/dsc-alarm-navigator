@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import styles from "./pending.module.css";
+import styles from "./LogoutButton.module.css";
 import { authClient } from "@/lib/auth/auth-client";
 
 export function LogoutButton() {
