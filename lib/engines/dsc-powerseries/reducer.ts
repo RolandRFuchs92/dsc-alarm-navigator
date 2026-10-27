@@ -96,7 +96,7 @@ function typeDigit(state: DscState, key: Key): string | null {
   return result;
 }
 
-function flipOption(state: DscState, model: PanelModelData, n: number): DscState {
+export function flipOption(state: DscState, model: PanelModelData, n: number): DscState {
   const section = readSection(state, model)!;
   const num = state.section ?? 0;
   if (!readOptions(section, num).some((o) => o.n === n)) return state;

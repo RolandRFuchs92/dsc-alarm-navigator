@@ -1,6 +1,6 @@
 /* Derived views: LCD lines, LEDs, "you are here" text and breadcrumbs. Ported from src/app.js
-   (computeLcd, computeLeds, describeWaiting, buildCrumbs). The waiting text is plain text: the
-   legacy <strong> emphasis is dropped and React does the escaping. */
+   (computeLcd, computeLeds, describeWaiting, buildCrumbs). The waiting text is plain text; the legacy
+   <strong> spans are marked with private-use characters and handed out as waitingParts (React escapes). */
 import type { KeypadModelDef, PanelModelData, SectionDef } from "@/lib/content/types";
 import type { Display, LedState, Leds, Location, Worksheet } from "../types";
 import {
@@ -186,64 +186,87 @@ export function selectDisplay(state: DscState, model: PanelModelData, keypad: Ke
 
 /* ---------- "you are here" ---------- */
 
+const EM_OPEN = "\uE000";
+const EM_CLOSE = "\uE001";
+
+// Mark a span the legacy app wrapped in <strong>.
+const em = (text: string | number): string => `${EM_OPEN}${text}${EM_CLOSE}`;
+
+// "a \uE000b\uE001 c" → [{a}, {b, strong}, {c}]
+function splitEmphasis(marked: string): Array<{ text: string; strong: boolean }> {
+  const result: Array<{ text: string; strong: boolean }> = [];
+  marked.split(EM_OPEN).forEach((chunk, i) => {
+    const [inner, rest] = i === 0 ? [null, chunk] : chunk.split(EM_CLOSE);
+    if (inner) result.push({ text: inner, strong: true });
+    if (rest) result.push({ text: rest, strong: false });
+  });
+  return result;
+}
+
 function describeDataWaiting(state: DscState, section: SectionDef, name: string): string {
   const sub = findSub(section, state.subCode);
   const entries = readEntries(section, state.section ?? 0, sub);
   const entry = entries[state.entryIndex];
-  const where = sub ? `${name}, sub-section [${sub.code}] ${sub.label}` : name;
+  const where = sub ? `${name}, sub-section ${em(`[${sub.code}] ${sub.label}`)}` : name;
   const variable = entry.variable ? "up to 32 digits" : `${entry.digits} digits`;
   const after = state.entryIndex + 1 < entries.length
     ? `After that it double-beeps and moves to ${entries[state.entryIndex + 1].label}.`
     : `This is the last entry. After it the keypad beeps 5 times and returns to ${sub ? "the sub-section prompt" : "Enter Section"}.`;
-  const result = `You are in ${where}. The panel wants ${variable} for ${entry.label} (entry ${state.entryIndex + 1} of ${entries.length}). ${after}${state.hex ? " HEX mode is on: 1-6 type A-F, [*] turns it off." : ""}`;
+  const result = `You are in ${where}. The panel wants ${em(variable)} for ${em(entry.label)} (entry ${state.entryIndex + 1} of ${entries.length}). ${after}${state.hex ? ` ${em("HEX mode is on")}: 1-6 type A-F, [*] turns it off.` : ""}`;
   return result;
 }
 
 function describeUserCodesWaiting(state: DscState, name: string): string {
   const texts: Record<string, string> = {
-    newCode: `Type the new ${readCodeLength(state)}-digit code for user ${state.userTarget}, or [*] to delete it.`,
-    attrUser: "Type the 2-digit user number whose attributes you want.",
-    partUser: "Type the 2-digit user number whose partitions you want.",
-    attr: `Press 1-8 to flip attributes for user ${state.userTarget}. [#] to finish.`,
-    part: `Press 1-8 to flip partitions for user ${state.userTarget}. [#] to finish.`,
+    newCode: `Type the new ${em(`${readCodeLength(state)}-digit code`)} for user ${state.userTarget}, or [*] to delete it.`,
+    attrUser: `Type the ${em("2-digit user number")} whose attributes you want.`,
+    partUser: `Type the ${em("2-digit user number")} whose partitions you want.`,
+    attr: `Press ${em("1-8")} to flip attributes for user ${state.userTarget}. [#] to finish.`,
+    part: `Press ${em("1-8")} to flip partitions for user ${state.userTarget}. [#] to finish.`,
   };
-  const fallback = "Type a 2-digit user number (01-95, 40 = master), or 98 for partitions, 99 for attributes.";
+  const fallback = `Type a ${em("2-digit user number")} (01-95, 40 = master), or 98 for partitions, 99 for attributes.`;
   const result = `You are in ${name}. ${(state.userStep && texts[state.userStep]) || fallback}`;
   return result;
 }
 
-export function describeWaiting(state: DscState, model: PanelModelData): string {
+// Waiting text with emphasis markers; selectLocation splits it into plain text and parts.
+function describeWaitingMarked(state: DscState, model: PanelModelData): string {
   const node = findNode(model, state.nodeId);
   const section = readSection(state, model);
   const sec = state.section !== null ? formatSection(state.section) : "";
   const instance = section && state.section !== null ? describeInstance(section, state.section) : "";
-  const name = node ? `${sec || formatNodeCode(node)} ${readNodeLabel(node)}${instance ? ` (${instance})` : ""}` : "";
+  const name = node ? `${em(`${sec || formatNodeCode(node)} ${readNodeLabel(node)}`)}${instance ? ` (${instance})` : ""}` : "";
   const bypassed = [...state.bypassed].sort((a, b) => a - b);
   const codePrompts = {
-    installer: `Type the installer code (default ${model.installerCodeDefault}).`,
-    master: `Type the master code (default ${model.masterCodeDefault}).`,
-    user: "Type any valid user code.",
+    installer: `Type the ${em("installer code")} (default ${model.installerCodeDefault}).`,
+    master: `Type the ${em("master code")} (default ${model.masterCodeDefault}).`,
+    user: `Type any valid ${em("user code")}.`,
   };
   const views: Record<Mode, () => string> = {
-    ready: () => "The keypad is idle. Press [*] to open the command menu.",
-    star: () => "You pressed [*]. Now press one number: 1 bypass, 2 troubles, 3 alarm memory, 4 chime, 5 user codes, 6 user functions, 7 outputs, 8 installer programming, 9 no-entry arm, 0 quick arm.",
+    ready: () => `The keypad is idle. Press ${em("[*]")} to open the command menu.`,
+    star: () => `You pressed [*]. Now press one number: ${em(1)} bypass, ${em(2)} troubles, ${em(3)} alarm memory, ${em(4)} chime, ${em(5)} user codes, ${em(6)} user functions, ${em(7)} outputs, ${em(8)} installer programming, ${em(9)} no-entry arm, ${em(0)} quick arm.`,
     code: () => (state.codeFor ? codePrompts[state.codeFor] : ""),
-    section: () => "You are at the top of installer programming. The Armed light is on: type a 3-digit section number, for example 001. Press [#] here to leave installer programming.",
-    sub: () => `You are in ${name}. Type a ${section?.subDigits}-digit sub-section: ${(section?.subs ?? []).map((s) => `${s.code} = ${s.label}`).join(", ")}. Press [#] to go back to Enter Section.`,
+    section: () => `You are at the ${em("top of installer programming")}. The Armed light is on: type a ${em("3-digit section number")}, for example 001. Press [#] here to leave installer programming.`,
+    sub: () => `You are in ${name}. Type a ${em(`${section?.subDigits}-digit sub-section`)}: ${(section?.subs ?? []).map((s) => `${s.code} = ${s.label}`).join(", ")}. Press [#] to go back to Enter Section.`,
     data: () => describeDataWaiting(state, section!, name),
-    phone: () => `You are in ${name}. Type up to 32 digits, then press [#] to save. Press [*] to switch to HEX digits (D = wait for dial tone).`,
-    toggle: () => `You are in ${name}. These are on/off options. Press 1-8 to flip one${section?.pages === 2 ? ", and [9] to switch between options 1-8 and 9-16" : ""}. Press [#] to save and go back to Enter Section.`,
+    phone: () => `You are in ${name}. Type up to 32 digits, then press ${em("[#]")} to save. Press [*] to switch to HEX digits (D = wait for dial tone).`,
+    toggle: () => `You are in ${name}. These are on/off options. Press ${em("1-8")} to flip one${section?.pages === 2 ? `, and ${em("[9]")} to switch between options 1-8 and 9-16` : ""}. Press [#] to save and go back to Enter Section.`,
     module: () => `You are in ${name}. This opens a separate module menu with its own sub-sections. Press [#] to go back.`,
     action: () => `You ran ${name}. Press [#] to go back to Enter Section.`,
-    confirm: () => `${name} needs confirming: type the ${state.confirmStep === "code" ? "installer code" : `section number ${sec} again`}. Press [#] to cancel. The simulator never changes a real panel.`,
-    bypass: () => `You are in ${name}. Type a 2-digit zone number to bypass or unbypass it. [#] to finish.${bypassed.length ? ` Bypassed now: ${bypassed.join(", ")}.` : ""}`,
-    trouble: () => `You are in ${name}. Press a number 1-8 to see the trouble detail. [#] to exit.`,
+    confirm: () => `${name} needs confirming: type the ${em(state.confirmStep === "code" ? "installer code" : `section number ${sec} again`)}. Press [#] to cancel. The simulator never changes a real panel.`,
+    bypass: () => `You are in ${name}. Type a ${em("2-digit zone number")} to bypass or unbypass it. [#] to finish.${bypassed.length ? ` Bypassed now: ${bypassed.join(", ")}.` : ""}`,
+    trouble: () => `You are in ${name}. Press a number ${em("1-8")} to see the trouble detail. [#] to exit.`,
     info: () => `You ran ${name}. Press [#] to go back to idle.`,
-    cmdOut: () => `You are in ${name}. Press 1-4 for the output.`,
+    cmdOut: () => `You are in ${name}. Press ${em("1-4")} for the output.`,
     userCodes: () => describeUserCodesWaiting(state, name),
-    userFn: () => `You are in ${name}. Press 1-8 for a function. [#] to exit.`,
+    userFn: () => `You are in ${name}. Press ${em("1-8")} for a function. [#] to exit.`,
   };
   const result = views[state.mode]();
+  return result;
+}
+
+export function describeWaiting(state: DscState, model: PanelModelData): string {
+  const result = describeWaitingMarked(state, model).replace(/[\uE000\uE001]/g, "");
   return result;
 }
 
@@ -281,6 +304,7 @@ export function selectLocation(state: DscState, model: PanelModelData): Location
   const result: Location = {
     crumbs: buildCrumbs(state, model),
     waitingFor: describeWaiting(state, model),
+    waitingParts: splitEmphasis(describeWaitingMarked(state, model)),
     sectionNum: state.section,
     sectionSlug: section ? section.slug : null,
     subCode: state.subCode,

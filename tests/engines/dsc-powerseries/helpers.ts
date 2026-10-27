@@ -125,6 +125,19 @@ export function runLegacySteps(steps: Array<(api: LegacyApi) => void>): LegacySn
   return result;
 }
 
+// The legacy waiting text as the HTML it rendered (with <strong> spans), one per step.
+export function runLegacyWaitingHtml(keys: Key[]): string[] {
+  const context: { __legacy?: LegacyApi } = {};
+  LEGACY_SCRIPT.runInNewContext(context);
+  const api = context.__legacy!;
+  const result = [api.describeWaiting()];
+  keys.forEach((key) => {
+    api.pressKey(key);
+    result.push(api.describeWaiting());
+  });
+  return result;
+}
+
 export function runLegacy(keys: Key[]): LegacySnapshot[] {
   const result = runLegacySteps(keys.map((key) => (api: LegacyApi) => api.pressKey(key)));
   return result;
