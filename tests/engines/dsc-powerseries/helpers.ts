@@ -142,21 +142,39 @@ export function snapshotEngine(state: DscState): LegacySnapshot {
   return result;
 }
 
-export function runEngine(keys: Key[]): LegacySnapshot[] {
+// Snapshots per step plus a flag per step saying whether the engine was in no-entry arming.
+export function runEngineFlagged(keys: Key[]): { snaps: LegacySnapshot[]; flags: boolean[] } {
   let state = engine.createInitialState(model);
-  const result = [snapshotEngine(state)];
+  const snaps = [snapshotEngine(state)];
+  const flags = [isNoEntryArming(state)];
   keys.forEach((key) => {
     state = engine.pressKey(freezeDeep(state), key, model);
-    result.push(snapshotEngine(state));
+    snaps.push(snapshotEngine(state));
+    flags.push(isNoEntryArming(state));
   });
+  const result = { snaps, flags };
   return result;
 }
 
-// The one deliberate exception: install guide p.7 — legacy showed steady. After [*][9][code] the guide says the
-// Armed light FLASHES; the engine does, legacy had it ON. Only that exact pair is normalised.
-export function normalizeNoEntryArmed(ours: LegacySnapshot[], legacy: LegacySnapshot[]): LegacySnapshot[] {
-  const result = ours.map((snap, i) => (snap.leds.armed === "flash" && legacy[i].leds.armed === "on"
-    ? { ...snap, leds: { ...snap.leds, armed: "on" } }
-    : snap));
+export function runEngine(keys: Key[]): LegacySnapshot[] {
+  const result = runEngineFlagged(keys).snaps;
+  return result;
+}
+
+// True in exactly the state [*][9][code] leaves the engine in: no-entry arming.
+export function isNoEntryArming(state: DscState): boolean {
+  const result = state.mode === "info" && state.nodeId === "k9";
+  return result;
+}
+
+// The one deliberate oracle exception: install guide p.7 — legacy showed steady. In no-entry arming the guide says the
+// Armed light FLASHES; the engine does, legacy had it ON. Only steps flagged as no-entry arming (ours 'flash', legacy
+// 'on') are normalised. Any other step where ours is 'flash' while legacy is 'on' fails loudly here.
+export function normalizeNoEntryArmed(ours: LegacySnapshot[], legacy: LegacySnapshot[], flags: boolean[]): LegacySnapshot[] {
+  const result = ours.map((snap, i) => {
+    const diverges = snap.leds.armed === "flash" && legacy[i].leds.armed === "on";
+    if (diverges && !flags[i]) throw new Error(`Armed flash vs on outside no-entry arming at step ${i}`);
+    return diverges ? { ...snap, leds: { ...snap.leds, armed: "on" } } : snap;
+  });
   return result;
 }
