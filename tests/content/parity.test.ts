@@ -140,6 +140,9 @@ describe("legacy content parity", () => {
     expect(file).toBe(sql);
   });
 
-  // Task 7 enables this once getPanelModel exists: migrate dsc_test, read pc1864 back, deep-equal to `model`.
-  it.todo("round-trips through dsc_test via getPanelModel('pc1864')");
+  it("round-trips through dsc_test via getPanelModel('pc1864')", async () => {
+    const { getPanelModel } = await import("@/lib/content/repo");
+    const got = await getPanelModel("pc1864");
+    expect(got).toEqual(normalize(model));
+  });
 });
