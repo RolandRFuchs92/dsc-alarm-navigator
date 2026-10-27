@@ -1,0 +1,15 @@
+/* Guide page: step card then keypad on phones, side by side on wide screens. */
+.page {
+  max-width: 1040px; margin: 0 auto;
+  /* bottom room for the fixed Back / Next bar */
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(96px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.back { display: inline-block; margin-bottom: 6px; color: var(--muted); }
+.head { margin-bottom: 14px; }
+.title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.body { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.keypadCol { width: 100%; max-width: 380px; justify-self: center; }
+@media (min-width: 820px) {
+  .body { grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; }
+  .keypadCol { justify-self: stretch; }
+}

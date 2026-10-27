@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { convertLegacy, loadLegacyData } from "@/scripts/convert-legacy";
 import { getEngine } from "@/lib/engines";
+import { parseKeys as parseGuideKeys } from "@/lib/guides/keys";
 import type { Key, PanelEngine } from "@/lib/engines/types";
 import type { DscState } from "@/lib/engines/dsc-powerseries/state";
 import type { KeypadModelDef, PanelModelData } from "@/lib/content/types";
@@ -12,15 +13,9 @@ export const model: PanelModelData = convertLegacy(loadLegacyData());
 export const engine = getEngine("dsc-powerseries") as PanelEngine<DscState>;
 export const textKeypad: KeypadModelDef = model.keypads.find((k) => k.displayType === "text")!;
 
-const KEY_TOKENS = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#", "<", ">"]);
-
-// Split "* 8 5 5 5 5" into keys (inlined parseKeys until Task 11 adds the guide parser).
+// Split "* 8 5 5 5 5" into keys with the guide parser, so engine tests use guide token rules.
 export function parseKeys(text: string): Key[] {
-  const tokens = text.split(/\s+/).filter(Boolean);
-  tokens.forEach((t) => {
-    if (!KEY_TOKENS.has(t)) throw new Error(`Bad key token ${t}`);
-  });
-  const result = tokens as Key[];
+  const result = parseGuideKeys(text, model);
   return result;
 }
 
