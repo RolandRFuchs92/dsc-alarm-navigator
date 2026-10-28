@@ -37,7 +37,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   return (
     <main className={styles.main}>
       <h1>{mode === "signup" ? "Create account" : "Log in"}</h1>
-      <form onSubmit={submit}>
+      {/* POST so a submit before hydration never puts the password in the URL */}
+      <form method="post" onSubmit={submit}>
         {mode === "signup" && (
           <label>Name<input name="name" required autoComplete="name" className={styles.field} /></label>
         )}

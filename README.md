@@ -33,6 +33,7 @@ All config comes from the environment. `.env.example` lists the keys:
 | `TEST_DATABASE_URL` | The `dsc_test` database (tests and `npm run db:migrate:test` only). |
 | `BETTER_AUTH_SECRET` | Session signing secret. Generate with `openssl rand -base64 32`. |
 | `BETTER_AUTH_URL` | The public URL of the site, e.g. `https://dsc.iamonline.co.za`. |
+| `TRUSTED_ORIGINS` | Optional, comma-separated extra origins you open the app from, e.g. your phone hitting the dev server by LAN IP: `http://192.168.10.177:3001`. Without it, `next dev` blocks its scripts for that host and sign-up just reloads. |
 
 Never commit `.env` files. In a Docker `--env-file`, do **not** quote values: Docker passes the
 quotes through literally (`KEY=value`, not `KEY="value"`).

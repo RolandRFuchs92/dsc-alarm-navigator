@@ -3,12 +3,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
+import { listTrustedOrigins } from "@/lib/auth/trusted-origins";
 
 // Open sign-up; the gate columns are server-only (input: false) so a client
 // can never self-approve or self-promote through the sign-up body.
 const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  trustedOrigins: listTrustedOrigins(process.env.TRUSTED_ORIGINS),
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: { enabled: true },
   user: {
