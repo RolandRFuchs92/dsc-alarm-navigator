@@ -152,6 +152,11 @@ docker build -t dsc-panel-guides .
 
 or locally and ship it: `docker save dsc-panel-guides | ssh server docker load`.
 
+Or push it to GitHub's registry with `deploy/build-and-push.sh` (tags the commit and `:latest`;
+`--no-push` builds only, `PLATFORM=linux/amd64` cross-builds). Log in once first:
+`gh auth refresh -s write:packages && gh auth token | docker login ghcr.io -u RolandRFuchs92 --password-stdin`.
+On the server, `docker login ghcr.io` with a `read:packages` token, then `docker pull` and run that image.
+
 **4. Run it.** Put the runtime env in a root-only file on the server, e.g.
 `/etc/dsc-panel-guides.env` (`chmod 600`, no quotes around values):
 
