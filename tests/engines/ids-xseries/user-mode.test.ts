@@ -109,8 +109,15 @@ describe("IDS X-Series: Options 0, 2, 3, 4 (user manual §9)", () => {
     expect(readLeds(state)).toMatchObject({ ready: "flash", armed: "flash" });
     expectNoCodes(state);
     const back = press(state, "# #");
-    expect(focusOf(press(back, "hold* 5 5 5 5 *")).mode).toBe("userTop");
-    expect(focusOf(press(back, "hold* 5 5 5 5 * 4 * 2 *")).beep).toBe("long"); // slot 2 holds it
+    expect(focusOf(press(back, "hold9 5 5 5 5 *")).mode).toBe("bypass"); // §5: any user code opens bypass
+    expect(focusOf(press(back, "hold* 1 2 3 4 * 4 * 2 *")).beep).toBe("long"); // slot 2 holds it
+  });
+
+  it("an added code is not the master code: hold * with it gives the error beep (§9 MASTER USER CODE)", () => {
+    const back = press(userTop(), "0 * 5 5 5 5 * # #");
+    const state = press(back, "hold* 5 5 5 5 *");
+    expect(focusOf(state)).toMatchObject({ mode: "userCode", beep: "error" });
+    expectNoCodes(state);
   });
 
   it("Option 0 refuses a duplicate", () => {
@@ -123,7 +130,7 @@ describe("IDS X-Series: Options 0, 2, 3, 4 (user manual §9)", () => {
     const deleted = press(added, "2 * 5 5 5 5 *");
     expect(focusOf(deleted)).toMatchObject({ mode: "userOption", beep: "long" });
     expectNoCodes(deleted);
-    expect(focusOf(press(deleted, "# # hold* 5 5 5 5 *")).mode).toBe("userCode");
+    expect(focusOf(press(deleted, "# # hold9 5 5 5 5 *")).mode).toBe("bypassCode");
   });
 
   it("Option 2 on slot 1's code sets it back to 1234 (step 4)", () => {
@@ -143,7 +150,7 @@ describe("IDS X-Series: Options 0, 2, 3, 4 (user manual §9)", () => {
     const state = press(slot, "6 6 6 6 *");
     expect(readLeds(state)).toMatchObject({ ready: "flash", armed: "flash", away: "off" });
     expectNoCodes(state);
-    expect(focusOf(press(state, "# # hold* 6 6 6 6 *")).mode).toBe("userTop");
+    expect(focusOf(press(state, "# # hold9 6 6 6 6 *")).mode).toBe("bypass");
   });
 
   it("Option 3 with a slot outside 1-128 errors", () => {
@@ -155,7 +162,7 @@ describe("IDS X-Series: Options 0, 2, 3, 4 (user manual §9)", () => {
     const deleted = press(set, "4 * 2 *");
     expect(focusOf(deleted)).toMatchObject({ mode: "userOption", beep: "long" });
     expectNoCodes(deleted);
-    expect(focusOf(press(deleted, "# # hold* 6 6 6 6 *")).mode).toBe("userCode");
+    expect(focusOf(press(deleted, "# # hold9 6 6 6 6 *")).mode).toBe("bypassCode");
   });
 });
 

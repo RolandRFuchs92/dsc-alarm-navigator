@@ -133,13 +133,13 @@ function applyOptionEntry(state: IdsState, model: PanelModelData): IdsState {
 }
 
 export const USER_HANDLERS: Partial<Record<Mode, Handler>> = {
-  // §9 steps 4-5: [MASTER CODE] [*]; a long beep and READY flashing, or an error beep. The brief accepts any stored
-  // code here (a code added with Option 0 enters user program mode); Table 6 master rights are not simulated.
+  // §9 steps 4-5: [MASTER CODE] [*]; a long beep and READY flashing, or an error beep. Only the master code
+  // (slot 1, §8 "user code 1 is the Master User Code") opens it; Table 6 master rights for other codes aren't simulated.
   userCode(state, key) {
     if (key === "#") return resetToIdle(state);
     if (isDigit(key)) return typeDigit(state, key, readCodeLength(state));
     if (key !== "*") return state;
-    const result = findSlot(state, state.buffer) !== null ? { ...openUserTop(state), beep: "long" as const } : beepError(state);
+    const result = state.buffer === state.codes[1] ? { ...openUserTop(state), beep: "long" as const } : beepError(state);
     return result;
   },
 
