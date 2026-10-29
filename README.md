@@ -168,20 +168,24 @@ BETTER_AUTH_URL=https://dsc.iamonline.co.za
 
 ```bash
 docker run -d --name dsc-panel-guides --restart unless-stopped \
-  -p 127.0.0.1:3000:3000 --env-file /etc/dsc-panel-guides.env dsc-panel-guides
-curl -s http://127.0.0.1:3000/api/health      # {"ok":true,"db":true}
+  -p 127.0.0.1:10001:3000 --env-file /etc/dsc-panel-guides.env dsc-panel-guides
+curl -s http://127.0.0.1:10001/api/health      # {"ok":true,"db":true}
 ```
 
 If Postgres is another container, `<host>` must be reachable from inside this container: put both
 on the same Docker network (`--network <net>` and the Postgres container name as host), or publish
 Postgres on the host and use `--add-host=host.docker.internal:host-gateway` with `host.docker.internal`.
 
-Port 3000 is the container's published port on the server, and the nginx vhost proxies to
-`127.0.0.1:3000`. If 3000 is taken, change **both** the `-p 127.0.0.1:<port>:3000` mapping and
+Port 10001 is the container's published port on the server, and the nginx vhost proxies to
+`127.0.0.1:10001`. If 10001 is taken, change **both** the `-p 127.0.0.1:<port>:3000` mapping and
 `proxy_pass` in `dsc.iamonline.co.za`.
 
-To update: build the new image, run any new migrations, then
-`docker rm -f dsc-panel-guides` and the `docker run` above again.
+To update, run any new migrations, then on the server run `deploy/server-deploy.sh` (copy it
+over or use a checkout; run it with sudo if the env file is root-only). It pulls `:latest` (or the
+tag you pass), starts it on the side and checks `/api/health` before touching the live container,
+then swaps it in and restores the previous image if the new one fails. `--rollback` goes back to
+the image that was live before the last deploy. Settings (`ENV_FILE`, `HOST_PORT`, `NETWORK` (default `event-net`),
+`HOST_GATEWAY=1`, `NO_PULL=1` for images built on the server) are listed at the top of the script.
 
 **5. nginx.** The vhost now proxies to the container instead of serving files from `/var/www`:
 
