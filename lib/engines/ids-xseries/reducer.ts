@@ -94,7 +94,8 @@ function applyCodeLength(before: IdsState, after: IdsState, model: PanelModelDat
 const HANDLERS: Partial<Record<Mode, Handler>> = {
   idle(state, key) {
     // [#] [INSTALLER CODE] [*] enters program mode (§8).
-    const result: IdsState = key === "#" ? { ...state, mode: "installerCode", buffer: "", path: [{ key: "#", label: "" }] } : state;
+    // A user program command shown from the map (nodeId) is left behind once a key leaves idle.
+    const result: IdsState = key === "#" ? { ...state, mode: "installerCode", nodeId: null, buffer: "", path: [{ key: "#", label: "" }] } : state;
     return result;
   },
 

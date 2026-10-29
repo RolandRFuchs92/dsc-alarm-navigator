@@ -25,6 +25,10 @@ type Props = {
   sourceText: string;
 };
 
+// The legacy DSC opening, inside [001] about to program zone 1. Other panels open idle: the IDS keypad has to be idle
+// for hold [*] (user manual §9) and hold [9] (§5).
+const DEFAULT_SECTION: Record<string, number> = { "dsc-powerseries": 1 };
+
 const EMPTY_FOCUS: Focus = { nodeId: null, mode: "", entryIndex: null, buffer: "", trail: [], isInstallerTop: false, beep: null };
 
 // The URL that reopens this state: /map/005?sub=02 for sections, /map?cmd=k5 for [*] commands.
@@ -43,12 +47,13 @@ export function MenuMap({ model, keypad, start, basePath, subtitle, sourceText }
   const hostRef = useRef<KeypadHandle>(null);
   const isLoaded = useRef(false);
 
-  // Deep link, else the legacy opening: inside [001], about to program zone 1.
+  // Deep link, else the engine's default opening (DEFAULT_SECTION), else idle.
   const buildStart = useCallback((worksheet?: Worksheet): unknown => {
     const fresh = engine.createInitialState(model, worksheet);
     if (start.section !== null && engine.navigateToSection) return engine.navigateToSection(fresh, model, start.section, start.sub);
     if (start.command && engine.navigateToNode) return engine.navigateToNode(fresh, model, start.command);
-    const result = engine.navigateToSection ? engine.navigateToSection(fresh, model, 1) : fresh;
+    const opening = DEFAULT_SECTION[model.engineKey];
+    const result = opening !== undefined && engine.navigateToSection ? engine.navigateToSection(fresh, model, opening) : fresh;
     return result;
   }, [engine, model, start]);
 
@@ -81,12 +86,14 @@ export function MenuMap({ model, keypad, start, basePath, subtitle, sourceText }
 
   const apply = (update: (s: unknown) => unknown) => hostRef.current?.applyState(update);
   const pickNode = (id: string, num?: number) => apply((s) => engine.navigateToNode?.(s, model, id, num) ?? s);
+  // Row clicks the engine can't do are left out, so those rows aren't clickable and their hints are hidden.
+  const { navigateToSub, navigateToEntry, applyLookupValue, flipOption } = engine;
   const actions: DetailActions = {
     pickNode,
-    pickSub: (code) => apply((s) => engine.navigateToSub?.(s, model, code) ?? s),
-    pickEntry: (index) => apply((s) => engine.navigateToEntry?.(s, index) ?? s),
-    pickValue: (code) => apply((s) => engine.applyLookupValue?.(s, model, code) ?? s),
-    pickOption: (n) => apply((s) => engine.flipOption?.(s, model, n) ?? s),
+    pickSub: navigateToSub ? (code) => apply((s) => navigateToSub(s, model, code)) : undefined,
+    pickEntry: navigateToEntry ? (index) => apply((s) => navigateToEntry(s, index)) : undefined,
+    pickValue: applyLookupValue ? (code) => apply((s) => applyLookupValue(s, model, code)) : undefined,
+    pickOption: flipOption ? (n) => apply((s) => flipOption(s, model, n)) : undefined,
   };
 
   return (

@@ -4,12 +4,13 @@ import { describeInstance, formatSection, readEntries, readLookup, readOptions, 
 import type { EntryDef, PanelModelData, SectionDef } from "@/lib/content/types";
 import type { Focus, Worksheet } from "@/lib/engines/types";
 
+// Row clicks; left out when the engine can't do them, and then the rows aren't clickable.
 export type DetailActions = {
   pickNode: (id: string, num?: number) => void;
-  pickSub: (code: string) => void;
-  pickEntry: (index: number) => void;
-  pickValue: (code: string) => void;
-  pickOption: (n: number) => void;
+  pickSub?: (code: string) => void;
+  pickEntry?: (index: number) => void;
+  pickValue?: (code: string) => void;
+  pickOption?: (n: number) => void;
 };
 
 export type BodyProps = {
@@ -21,6 +22,12 @@ export type BodyProps = {
   worksheet: Worksheet;
   on: DetailActions;
 };
+
+// "clickable" only for rows the engine can act on; `extra` is the rest of the class list, starting with a space.
+function buildRowClass(isClickable: boolean, extra: string): string | undefined {
+  const result = `${isClickable ? "clickable" : ""}${extra}`.trim() || undefined;
+  return result;
+}
 
 export function RangePicker({ section, num, on }: Pick<BodyProps, "section" | "num" | "on">) {
   const [first, last] = section.range!;
@@ -50,7 +57,7 @@ export function SubBody(props: BodyProps) {
           {(section.subs ?? []).map((s) => {
             const isCurrent = s.code === subCode;
             return (
-              <tr key={s.code} className={`clickable${isCurrent ? " is-current" : ""}`} onClick={() => on.pickSub(s.code)}>
+              <tr key={s.code} className={buildRowClass(!!on.pickSub, isCurrent ? " is-current" : "")} onClick={on.pickSub ? () => on.pickSub!(s.code) : undefined}>
                 <td className="num">[{s.code}]</td>
                 <td>{s.label}{isCurrent ? <> <span className="here">keypad is here</span></> : null}</td>
                 <td>{(s.entries ?? []).map((e) => e.label).join(", ")}</td>
@@ -70,12 +77,12 @@ function LookupTable({ model, lookupKey, current, on }: { model: PanelModelData;
   return (
     <>
       <h3>{lookup.title}: what to type</h3>
-      <span className="picker-label">Click a row to type that value into the current entry.</span>
+      {on.pickValue ? <span className="picker-label">Click a row to type that value into the current entry.</span> : null}
       <div className="table-wrap"><table>
         <thead><tr><th className="num">Value</th><th>Meaning</th></tr></thead>
         <tbody>
           {Object.keys(lookup.values).map((code) => (
-            <tr key={code} className={`clickable${code === current ? " is-current" : ""}`} onClick={() => on.pickValue(code)}>
+            <tr key={code} className={buildRowClass(!!on.pickValue, code === current ? " is-current" : "")} onClick={on.pickValue ? () => on.pickValue!(code) : undefined}>
               <td className="num">{code}</td>
               <td>{lookup.values[code]}</td>
             </tr>
@@ -109,7 +116,7 @@ export function EntriesTable({ model, section, num, subCode, focus, worksheet, o
             const value = worksheet.values[readValueKey(num, sub ? sub.code : null, i)];
             const isCurrent = focus.entryIndex === i;
             return (
-              <tr key={i} className={`clickable${isCurrent ? " is-current" : ""}`} onClick={() => on.pickEntry(i)}>
+              <tr key={i} className={buildRowClass(!!on.pickEntry, isCurrent ? " is-current" : "")} onClick={on.pickEntry ? () => on.pickEntry!(i) : undefined}>
                 <td className="num">{i + 1}</td>
                 <td>{e.label}{e.note ? <span className="meaning">{e.note}</span> : null}{isCurrent ? <> <span className="here">keypad is here</span></> : null}</td>
                 <td className="num">{e.variable ? "up to 32" : e.digits}</td>
@@ -166,7 +173,7 @@ export function ToggleBody({ section, num, worksheet, on }: BodyProps) {
             const isOn = set.has(o.n);
             const keyHint = o.n > 8 ? `[9] then [${o.n - 8}]` : `[${o.n}]`;
             return (
-              <tr key={o.n} className={`clickable${o.future ? " is-future" : ""}`} onClick={() => on.pickOption(o.n)}>
+              <tr key={o.n} className={buildRowClass(!!on.pickOption, o.future ? " is-future" : "")} onClick={on.pickOption ? () => on.pickOption!(o.n) : undefined}>
                 <td className="num">{o.n}{section.pages === 2 ? <span className="meaning">{keyHint}</span> : null}</td>
                 <td>{o.on}</td>
                 <td>{o.off || ""}</td>

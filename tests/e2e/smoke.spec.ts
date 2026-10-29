@@ -81,14 +81,17 @@ test("sign-up, approval, guide, map, revoke, with a clean CSP", async ({ browser
   await user.goto("/devices/x64/guides/add-zone?step=6");
   await expect(user.locator('[aria-label*="Classic"]').first()).toBeVisible();
 
-  // On the X64 map the keypad is idle: enter user program mode, hold * is a release-send, light 9 comes on.
+  // The X64 deep link opens in installer program mode inside location 201 and keeps its URL. A short click on *
+  // sends * on release, so 9 * switches zone 9 into partition 1 and light 9 comes on.
   await user.goto("/devices/x64/map/201");
   const face = user.locator('[aria-label*="Classic"]').first();
   await expect(face).toBeVisible();
-  for (const key of ["#", "9", "9", "9", "9", "*", "2", "0", "1", "*", "9", "*"]) {
+  await expect(user.locator(".where .waiting")).toContainText("You are in [201]");
+  for (const key of ["9", "*"]) {
     await face.locator(`button[data-key="${key}"]`).click();
   }
   await expect(face.getByTestId("zone-light").filter({ hasText: /^9$/ })).toHaveAttribute("data-state", "on");
+  await expect(user).toHaveURL(/\/devices\/x64\/map\/201$/);
 
   // The admin revokes B; B's next navigation is gated.
   await admin.goto("/admin/users");

@@ -15,6 +15,7 @@ import {
   readWorksheet,
 } from "./state";
 import type { IdsState, Mode } from "./state";
+import { PROGRAM_CRUMB } from "./navigation";
 import { USER_OPTION_LABELS, isTypingCode, maskCode } from "./user-mode";
 
 /* ---------- status lights ---------- */
@@ -180,7 +181,8 @@ function buildCrumbs(state: IdsState, model: PanelModelData): Location["crumbs"]
   if (state.mode === "bypassCode" || state.mode === "bypass") return [{ label: "Bypass", target: null }];
   if (!PROGRAM_MODES.includes(state.mode)) return [{ label: "Keypad", target: null }];
   const section = readSection(state, model);
-  const crumbs: Location["crumbs"] = [{ label: "Program mode", target: null }];
+  // Inside a location the Program mode crumb goes back to the top, like [#] (§8).
+  const crumbs: Location["crumbs"] = [{ label: "Program mode", target: section ? PROGRAM_CRUMB : null }];
   if (section) crumbs.push({ label: formatLocation(section, state.location ?? 0), target: null });
   const result = crumbs;
   return result;
@@ -191,7 +193,7 @@ export function selectLocation(state: IdsState, model: PanelModelData): Location
     crumbs: buildCrumbs(state, model),
     waitingFor: describeWaiting(state, model),
     sectionNum: state.location,
-    sectionSlug: state.nodeId,
+    sectionSlug: state.location === null ? null : state.nodeId, // in idle, nodeId may be a user program command
     subCode: null,
     isError: state.beep === "error",
   };
@@ -210,7 +212,7 @@ export function selectFocus(state: IdsState, model: PanelModelData): Focus {
     entryIndex: typing ? state.entryIndex : null,
     buffer,
     trail: [...state.path, ...pending],
-    isInstallerTop: state.mode === "programTop" || state.mode === "installerCode",
+    isInstallerTop: state.mode === "programTop", // the top of program mode, waiting for a location number (§8)
     beep: state.beep,
   };
   return result;

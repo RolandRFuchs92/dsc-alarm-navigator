@@ -194,6 +194,6 @@ export function applyHoldKey(state: IdsState, key: Key): IdsState {
   if (state.mode !== "idle") return state;
   const mode: Mode = key === "hold*" ? "userCode" : "bypassCode";
   const chip = key === "hold*" ? { key, label: "User program mode" } : { key, label: "Bypass" };
-  const result: IdsState = { ...state, mode, buffer: "", beep: null, unsimulatedOption: null, path: [chip] };
+  const result: IdsState = { ...state, mode, nodeId: null, buffer: "", beep: null, unsimulatedOption: null, path: [chip] };
   return result;
 }

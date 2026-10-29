@@ -1,4 +1,5 @@
 import type { Key, PanelEngine } from "../types";
+import { clearWorksheet, followCrumb, navigateToNode, navigateToSection, resetKeypad } from "./navigation";
 import { pressKey } from "./reducer";
 import { selectDisplay, selectFocus, selectLeds, selectLocation, selectWorksheet } from "./selectors";
 import { createInitialState } from "./state";
@@ -16,6 +17,11 @@ export const idsXSeriesEngine: PanelEngine<IdsState> = {
   selectLocation,
   selectWorksheet,
   selectFocus,
+  navigateToNode,
+  navigateToSection,
+  followCrumb,
+  resetKeypad,
+  clearWorksheet,
 };
 
 export type { IdsState };
