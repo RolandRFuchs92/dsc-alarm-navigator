@@ -1,6 +1,6 @@
 import type { LedState, Leds } from "@/lib/engines/types";
 
-const LED_ORDER: Array<{ id: keyof Leds; label: string }> = [
+const LED_ORDER: Array<{ id: string; label: string }> = [
   { id: "ready", label: "READY" },
   { id: "armed", label: "ARMED" },
   { id: "trouble", label: "TROUBLE" },

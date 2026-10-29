@@ -50,7 +50,7 @@ export function readLcd(state: DscState): [string, string] {
 
 export type LegacySnapshot = {
   lcd: [string, string];
-  leds: { ready: string; armed: string; trouble: string; ac: string };
+  leds: Record<string, string>;
   crumbs: Array<{ label: string; target: string | null }>;
   waiting: string;
   isError: boolean;

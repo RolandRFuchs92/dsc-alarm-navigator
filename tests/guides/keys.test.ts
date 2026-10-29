@@ -25,6 +25,11 @@ describe("parseKeys", () => {
     }
   });
 
+  it("rejects IDS-only keys and placeholders on a DSC model", () => {
+    expect(() => parseKeys("mode", model)).toThrow(KeyTokenError);
+    expect(() => parseKeys("{user-code}", model)).toThrow(KeyTokenError);
+  });
+
   it("throws on glued digits and unknown placeholders", () => {
     expect(() => parseKeys("201 #", model)).toThrow(KeyTokenError);
     expect(() => parseKeys("{user}", model)).toThrow(KeyTokenError);
@@ -33,7 +38,7 @@ describe("parseKeys", () => {
 
 describe("prototype keys are not tokens", () => {
   it.each(["constructor", "__proto__", "toString", "hasOwnProperty"])("parseKeys and formatKeycaps reject %s", (token) => {
-    for (const run of [() => parseKeys(token, model), () => formatKeycaps(token)]) {
+    for (const run of [() => parseKeys(token, model), () => formatKeycaps(token, "dsc-powerseries")]) {
       let caught: unknown = null;
       try {
         run();
@@ -48,15 +53,15 @@ describe("prototype keys are not tokens", () => {
 
 describe("formatKeycaps", () => {
   it("labels placeholders and keeps plain keys", () => {
-    expect(formatKeycaps("* 8 {installer}")).toEqual([
+    expect(formatKeycaps("* 8 {installer}", "dsc-powerseries")).toEqual([
       { label: "*", placeholder: false },
       { label: "8", placeholder: false },
       { label: "installer code", placeholder: true },
     ]);
-    expect(formatKeycaps("{master}")).toEqual([{ label: "master code", placeholder: true }]);
+    expect(formatKeycaps("{master}", "dsc-powerseries")).toEqual([{ label: "master code", placeholder: true }]);
   });
 
   it("throws KeyTokenError on an invalid token", () => {
-    expect(() => formatKeycaps("F1")).toThrow(KeyTokenError);
+    expect(() => formatKeycaps("F1", "dsc-powerseries")).toThrow(KeyTokenError);
   });
 });

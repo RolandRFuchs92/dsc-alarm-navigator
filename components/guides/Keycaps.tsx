@@ -2,8 +2,8 @@ import { formatKeycaps } from "@/lib/guides/keys";
 import styles from "./guides.module.css";
 
 // The keys for one step as keycaps; code placeholders show as one labelled cap.
-export function Keycaps({ keys }: { keys: string }) {
-  const caps = formatKeycaps(keys);
+export function Keycaps({ keys, engineKey }: { keys: string; engineKey: string }) {
+  const caps = formatKeycaps(keys, engineKey);
   if (!caps.length) return null;
   return (
     <ol className={styles.keycaps} aria-label="Keys to press">

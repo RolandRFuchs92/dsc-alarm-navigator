@@ -35,7 +35,7 @@ function checkTypingTarget(target: EventTarget | null): boolean {
 export function KeypadHost({ model, engineKey, keypad, initialState, onStateChange, ref, children }: Props) {
   const engine = getEngine(engineKey);
   const [state, dispatch] = useReducer(
-    (current: unknown, action: Action) => (action.type === "key" ? engine.pressKey(current, action.key, model) : action.update(current)),
+    (current: unknown, action: Action) => (action.type === "key" ? (engine.keys.includes(action.key) ? engine.pressKey(current, action.key, model) : current) : action.update(current)),
     initialState,
     (start) => start ?? engine.createInitialState(model),
   );

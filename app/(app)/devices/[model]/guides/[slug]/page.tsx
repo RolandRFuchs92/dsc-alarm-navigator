@@ -37,7 +37,7 @@ export default async function GuidePage({ params, searchParams }: { params: Para
         {guide.summary ? <p className="page-lead">{guide.summary}</p> : null}
       </div>
       <div className={styles.body}>
-        <StepCard step={guide.steps[number - 1]} number={number} count={guide.steps.length} modelSlug={model.slug} />
+        <StepCard step={guide.steps[number - 1]} number={number} count={guide.steps.length} modelSlug={model.slug} engineKey={model.engineKey} />
         <GuideRunner model={model} keypad={keypad} steps={guide.steps} stepIndex={number - 1} />
       </div>
       <StepNav number={number} count={guide.steps.length} basePath={`${modelPath}/guides/${guide.slug}`} doneHref={modelPath} />

@@ -1,10 +1,13 @@
 import type { KeypadModelDef, PanelModelData } from "@/lib/content/types";
 
 // The contract every panel-family engine implements. Engines are pure: no DOM, no storage.
-export type Key = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "*" | "#" | "<" | ">";
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+export type DscKey = Digit | "*" | "#" | "<" | ">";
+export type IdsKey = Digit | "*" | "#" | "mode" | "f" | "m" | "p" | "hold*" | "hold9";
+export type Key = DscKey | IdsKey;
 export type Worksheet = { values: Record<string, string>; toggles: Record<string, number[]> };
-export type LedState = "on" | "off" | "flash";
-export type Leds = { ready: LedState; armed: LedState; trouble: LedState; ac: LedState };
+export type LedState = "on" | "off" | "flash" | "alternate"; // alternate: flashing out of phase with other flashing lights
+export type Leds = Record<string, LedState>; // each engine names the lights its keypads have
 export type Display =
   | { type: "text"; lines: [string, string] }
   | { type: "lights"; count: number; lights: Record<number, LedState>; verified: boolean }
@@ -31,6 +34,7 @@ export type Focus = {
 };
 
 export interface PanelEngine<S> {
+  keys: readonly Key[]; // the keys this panel family's keypads have
   createInitialState(model: PanelModelData, worksheet?: Worksheet): S;
   pressKey(state: S, key: Key, model: PanelModelData): S; // pure; never mutates `state`
   selectDisplay(state: S, model: PanelModelData, keypad: KeypadModelDef): Display;

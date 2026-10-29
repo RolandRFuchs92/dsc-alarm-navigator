@@ -21,7 +21,7 @@ function readLcd(): string {
 
 describe("StepCard", () => {
   it("shows title, keycaps with a labelled placeholder, note; no section link without a ref", () => {
-    render(<StepCard step={STEPS[0]} number={1} count={2} modelSlug="pc1864" />);
+    render(<StepCard step={STEPS[0]} number={1} count={2} modelSlug="pc1864" engineKey="dsc-powerseries" />);
     expect(screen.getByRole("heading", { name: /Enter installer programming/ })).toBeTruthy();
     expect(screen.getByText("installer code")).toBeTruthy();
     expect(screen.getByText("Armed light on.")).toBeTruthy();
@@ -29,7 +29,7 @@ describe("StepCard", () => {
   });
 
   it("shows the warning and a section link when sectionRef is set", () => {
-    render(<StepCard step={STEPS[1]} number={2} count={2} modelSlug="pc1864" />);
+    render(<StepCard step={STEPS[1]} number={2} count={2} modelSlug="pc1864" engineKey="dsc-powerseries" />);
     expect(screen.getByRole("note").textContent).toContain("Careful.");
     expect(screen.getByRole("link", { name: /View this section/ }).getAttribute("href")).toBe("/devices/pc1864/map/201");
   });
