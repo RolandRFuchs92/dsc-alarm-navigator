@@ -93,6 +93,24 @@ test("sign-up, approval, guide, map, revoke, with a clean CSP", async ({ browser
   await expect(face.getByTestId("zone-light").filter({ hasText: /^9$/ })).toHaveAttribute("data-state", "on");
   await expect(user).toHaveURL(/\/devices\/x64\/map\/201$/);
 
+  // A fresh X64 map is idle. Holding * on the face for over a second enters user program mode: READY and ARMED
+  // alternate (user manual §9 step 3). Retried until the page has hydrated; a second hold outside idle changes nothing.
+  await user.goto("/devices/x64/map");
+  const idleFace = user.locator('[aria-label*="Classic"]').first();
+  await expect(user.locator(".where .waiting")).toContainText("The keypad is idle");
+  const star = idleFace.locator('button[data-key="*"]');
+  await expect(async () => {
+    const box = await star.boundingBox();
+    if (!box) throw new Error("no * key on the face");
+    await user.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await user.mouse.down();
+    await user.waitForTimeout(1100);
+    await user.mouse.up();
+    await expect(idleFace.getByTestId("status-ready")).toHaveAttribute("data-state", "alternate", { timeout: 1000 });
+    await expect(idleFace.getByTestId("status-armed")).toHaveAttribute("data-state", "alternate", { timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+  await expect(user.locator(".where .waiting")).toContainText("Type the master code");
+
   // The admin revokes B; B's next navigation is gated.
   await admin.goto("/admin/users");
   await row.getByRole("button", { name: "Revoke" }).click();

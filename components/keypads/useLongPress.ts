@@ -10,6 +10,7 @@ type PressHandlers = {
   onPointerLeave: (e: PointerEvent) => void;
   onPointerCancel: (e: PointerEvent) => void;
   onClick: (e: MouseEvent) => void;
+  onContextMenu: (e: MouseEvent) => void;
 };
 
 // Pointer handling per key. Holdable keys (key -> its hold key) send the plain key on a short release and the hold key
@@ -55,6 +56,8 @@ export function useLongPress(onKey: (k: Key) => void, holdable: Record<string, K
       onPointerLeave: handleAbort,
       onPointerCancel: handleAbort,
       onClick: (e) => { if (e.detail === 0) onKey(key); },
+      // A long touch on a phone opens the context menu; on a holdable key that would swallow the hold.
+      onContextMenu: (e) => { if (holdKey) e.preventDefault(); },
     };
     return result;
   }

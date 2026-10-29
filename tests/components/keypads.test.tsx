@@ -140,6 +140,13 @@ describe("IdsClassicLed", () => {
     expect(onKey.mock.calls.map((c) => c[0])).toEqual(["*", "3"]);
   });
 
+  it("holdable keys suppress the long-press menu; other keys don't", () => {
+    renderIds();
+    expect(fireEvent.contextMenu(btn("*"))).toBe(false);
+    expect(fireEvent.contextMenu(btn("9"))).toBe(false);
+    expect(fireEvent.contextMenu(btn("1"))).toBe(true);
+  });
+
   it("F, M, P are disabled and send nothing", () => {
     const onKey = renderIds();
     for (const k of ["F", "M", "P"]) {
