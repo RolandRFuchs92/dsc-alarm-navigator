@@ -18,7 +18,7 @@ INSERT INTO guide_step (guide_id, position, title, keys, note, warning, section_
 			$q$Location 2 holds the types of zones 9 to 16. You start on zone 9.$q$, NULL, 2),
 		(3, $q$Set zone 9 to Instant$q$, $q$4 *$q$,
 			$q$04 = Instant zone. The cursor moves on to zone 10.$q$,
-			$q$An Instant zone sounds the alarm at once when the system is armed, with no entry delay.$q$, 2),
+			$q$A violation of an Instant zone registers an alarm condition when the system is armed.$q$, 2),
 		(4, $q$Back to the top$q$, $q$#$q$,
 			$q$# leaves the location and returns to waiting for a location number. If READY is already flashing with ARM and AWAY off, you are back at the top: skip this #.$q$, NULL, NULL),
 		(5, $q$Open partition 1 zones$q$, $q$2 0 1 *$q$,

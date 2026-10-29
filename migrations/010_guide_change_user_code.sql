@@ -14,7 +14,7 @@ INSERT INTO guide_step (guide_id, position, title, keys, note, warning, section_
 		(1, $q$Make sure the system is disarmed$q$, $q$$q$,
 			$q$User program mode only opens while the system is disarmed. The new code must be unique: no other user may already have it. Codes are 4 digits unless location 23 is set to 6.$q$, NULL, NULL::integer),
 		(2, $q$Start user program mode$q$, $q$hold*$q$,
-			$q$Hold * for about a second. ARM and READY flash alternately.$q$, NULL, NULL),
+			$q$Hold * until the keypad beeps. ARM and READY flash alternately.$q$, NULL, NULL),
 		(3, $q$Enter the master code$q$, $q${master} *$q$,
 			$q$Only the master code (user code 1) opens user program mode. A long beep sounds and READY flashes.$q$, NULL, NULL),
 		(4, $q$Choose option 1 (edit a code)$q$, $q$1 *$q$,
