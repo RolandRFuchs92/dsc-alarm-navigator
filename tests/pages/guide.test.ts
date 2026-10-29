@@ -43,7 +43,7 @@ describe("guide page", () => {
     vi.mocked(notFound).mockClear();
     const html = renderToStaticMarkup(await openGuide("pc1864", "create-partition"));
     expect(notFound).not.toHaveBeenCalled();
-    expect(html).toContain("Step 1 of 10");
+    expect(html).toContain("Step 1 of 11");
     expect(html).toContain("Enter installer programming");
     expect(html).toContain("installer code");
     expect(html).toMatch(/class="badge unverified"[^>]*>unverified/);
@@ -53,7 +53,7 @@ describe("guide page", () => {
 
   it("?step=3 shows step 3 with its section link", async () => {
     const html = renderToStaticMarkup(await openGuide("pc1864", "create-partition", "3"));
-    expect(html).toContain("Step 3 of 10");
+    expect(html).toContain("Step 3 of 11");
     expect(html).toContain("Give it zones 9");
     expect(html).toContain('href="/devices/pc1864/map/211"');
     expect(html).toContain('href="/devices/pc1864/guides/create-partition?step=2"');
@@ -61,9 +61,9 @@ describe("guide page", () => {
   });
 
   it("out-of-range and junk ?step= clamp", async () => {
-    expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", "99"))).toContain("Step 10 of 10");
-    expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", "abc"))).toContain("Step 1 of 10");
-    expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", ["4", "5"]))).toContain("Step 4 of 10");
+    expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", "99"))).toContain("Step 11 of 11");
+    expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", "abc"))).toContain("Step 1 of 11");
+    expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", ["4", "5"]))).toContain("Step 4 of 11");
   });
 
   it("step 4 shows its warning", async () => {

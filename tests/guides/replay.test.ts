@@ -21,10 +21,10 @@ describe("buildStepState", async () => {
   const guide = (await getGuide("pc1864", "create-partition"))!;
   const engine = getEngine(model.engineKey);
 
-  it("the sample guide is stored, unverified, with 10 steps", () => {
+  it("the sample guide is stored, unverified, with 11 steps", () => {
     expect(guide).not.toBeNull();
     expect(guide.verified).toBe(false);
-    expect(guide.steps.map((s) => s.position)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(guide.steps.map((s) => s.position)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
   });
 
   it("before step 1 the keypad is fresh", () => {
@@ -51,7 +51,7 @@ describe("buildStepState", async () => {
 
   // The check that would have caught `# #` leaving installer mode early: every installer-mode
   // step must start at Enter Section, and leaving installer programming must land at idle.
-  it.each([2, 3, 4, 5, 6, 7, 8, 9])("before step %i the keypad is at Enter Section in installer programming", (n) => {
+  it.each([2, 3, 4, 6, 7, 8, 9, 10])("before step %i the keypad is at Enter Section in installer programming", (n) => {
     const state = buildStepState(engine, model, guide.steps, n - 1);
     const location = engine.selectLocation(state, model);
     expect(location.waitingFor, `before step ${n}`).toMatch(/top of installer programming/);
@@ -59,8 +59,15 @@ describe("buildStepState", async () => {
     expect(engine.selectLeds(state).armed, `before step ${n}`).toBe("on");
   });
 
-  it("after step 9 the keypad is idle, out of installer programming", () => {
-    const state = buildStepState(engine, model, guide.steps, 9);
+  it("after step 4 the keypad is still inside [203] so the zones show", () => {
+    const state = buildStepState(engine, model, guide.steps, 4);
+    const location = engine.selectLocation(state, model);
+    expect(location.sectionNum).toBe(203);
+    expect(location.waitingFor).toContain("Partition 1, zones 9-16");
+  });
+
+  it("after step 10 the keypad is idle, out of installer programming", () => {
+    const state = buildStepState(engine, model, guide.steps, 10);
     const location = engine.selectLocation(state, model);
     expect(location.waitingFor).toMatch(/keypad is idle/);
     expect(location.crumbs.map((c) => c.label)).toEqual(["Keypad"]);
