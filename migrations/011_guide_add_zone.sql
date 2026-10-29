@@ -13,11 +13,11 @@ INSERT INTO guide_step (guide_id, position, title, keys, note, warning, section_
 	CROSS JOIN (VALUES
 		(1, $q$Enter installer programming$q$, $q$# {installer} *$q$,
 			$q$Do this while the system is disarmed. READY flashes when you are in.$q$,
-			$q$Zone 9 needs the plug-in zone expander (P/N 860-06-X-08PI) fitted and enrolled, or the panel can't see the zone.$q$, NULL::integer),
+			$q$Zone 9 needs the plug-in zone expander (P/N 860-06-X-08PI) fitted (and enrolled, if its instructions say so), or the panel can't see the zone.$q$, NULL::integer),
 		(2, $q$Open zones 9 to 16$q$, $q$2 *$q$,
 			$q$Location 2 holds the types of zones 9 to 16. You start on zone 9.$q$, NULL, 2),
 		(3, $q$Set zone 9 to Instant$q$, $q$4 *$q$,
-			$q$04 = Instant zone. The cursor moves on to zone 10.$q$,
+			$q$04 = Instant zone. The panel should stay in location 2 (READY on, ARM and AWAY flashing). If ARM goes solid instead, the panel took 4 as a zone number: press # and report it.$q$,
 			$q$A violation of an Instant zone registers an alarm condition when the system is armed.$q$, 2),
 		(4, $q$Back to the top$q$, $q$#$q$,
 			$q$# leaves the location and returns to waiting for a location number. If READY is already flashing with ARM and AWAY off, you are back at the top: skip this #.$q$, NULL, NULL),

@@ -16,7 +16,7 @@ INSERT INTO guide_step (guide_id, position, title, keys, note, warning, section_
 		(2, $q$Start user program mode$q$, $q$hold*$q$,
 			$q$Hold * until the keypad beeps. ARM and READY flash alternately.$q$, NULL, NULL),
 		(3, $q$Enter the master code$q$, $q${master} *$q$,
-			$q$Only the master code (user code 1) opens user program mode. A long beep sounds and READY flashes.$q$, NULL, NULL),
+			$q$Enter the master code (user code 1 by default, 1234). A long beep sounds and READY flashes.$q$, NULL, NULL),
 		(4, $q$Choose option 1 (edit a code)$q$, $q$1 *$q$,
 			$q$READY and ARM flash together.$q$, NULL, NULL),
 		(5, $q$Enter the old code$q$, $q${user-code} *$q$,
