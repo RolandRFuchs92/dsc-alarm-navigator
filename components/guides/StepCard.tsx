@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { readMapCopy } from "@/components/map/copy";
 import type { GuideStep } from "@/lib/content/repo";
 import { Keycaps } from "./Keycaps";
 import styles from "./guides.module.css";
@@ -17,7 +18,7 @@ export function StepCard({ step, number, count, modelSlug, engineKey }: Props) {
       {step.warning ? <p role="note" className={styles.warning}>{`Warning: ${step.warning}`}</p> : null}
       {ref !== null ? (
         <Link href={`/devices/${modelSlug}/map/${String(ref).padStart(3, "0")}`} className={styles.sectionLink}>
-          {`View this section [${String(ref).padStart(3, "0")}]`}
+          {readMapCopy(engineKey).sectionLink(ref)}
         </Link>
       ) : null}
     </section>

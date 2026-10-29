@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { formatNodeCode } from "@/lib/content/format";
 import type { KeypadCommandDef, PanelModelData, SectionDef } from "@/lib/content/types";
+import type { MapCopy } from "./copy";
 
-type Props = { model: PanelModelData; currentId: string | null; onPick: (id: string) => void };
+type Props = { model: PanelModelData; copy: MapCopy; currentId: string | null; onPick: (id: string) => void };
 
 const KEYPAD_GROUP = "keypad";
 
@@ -26,8 +27,8 @@ function NodeButton({ node, id, isCurrent, onPick }: { node: SectionDef | Keypad
   );
 }
 
-// "Browse all menus": [*] commands, then every installer section by group. Collapses to a toggle on phones.
-export function Tree({ model, currentId, onPick }: Props) {
+// "Browse all menus": keypad commands, then every installer section by group. Collapses to a toggle on phones.
+export function Tree({ model, copy, currentId, onPick }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set([KEYPAD_GROUP]));
   const currentGroup = findGroupOf(model, currentId);
@@ -59,12 +60,12 @@ export function Tree({ model, currentId, onPick }: Props) {
       <div className="tree-body">
         <h2>Keypad commands</h2>
         <details open={openGroups.has(KEYPAD_GROUP)} onToggle={(e) => toggleGroup(KEYPAD_GROUP, e.currentTarget.open)}>
-          <summary>[*] commands</summary>
+          <summary>{copy.commandsSummary}</summary>
           <ul>
             {model.commands.map((c) => <NodeButton key={c.slug} node={c} id={c.slug} isCurrent={c.slug === currentId} onPick={pickNode} />)}
           </ul>
         </details>
-        <h2>Installer programming [*][8]</h2>
+        <h2>{copy.installerHeading}</h2>
         {model.groups.map((g) => (
           <details key={g.slug} open={openGroups.has(g.slug)} onToggle={(e) => toggleGroup(g.slug, e.currentTarget.open)}>
             <summary>{g.label}</summary>

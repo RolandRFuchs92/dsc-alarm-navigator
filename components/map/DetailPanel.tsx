@@ -4,11 +4,13 @@ import type { ReactNode } from "react";
 import { describeInstance, formatNodeCode, formatSection } from "@/lib/content/format";
 import type { KeypadCommandDef, PanelModelData, SectionDef } from "@/lib/content/types";
 import type { Focus, Location, Worksheet } from "@/lib/engines/types";
+import type { MapCopy } from "./copy";
 import { EntriesTable, PhoneBody, RangePicker, SubBody, ToggleBody } from "./SectionBodies";
 import type { BodyProps, DetailActions } from "./SectionBodies";
 
 type Props = {
   model: PanelModelData;
+  copy: MapCopy;
   focus: Focus;
   location: Location;
   worksheet: Worksheet;
@@ -59,12 +61,12 @@ function Related({ model, ids, on }: { model: PanelModelData; ids: string[] | un
   );
 }
 
-function KeypadOverview({ model, sourceText, on }: Pick<Props, "model" | "sourceText" | "on">) {
+function KeypadOverview({ model, copy, sourceText, on }: Pick<Props, "model" | "copy" | "sourceText" | "on">) {
   return (
     <>
-      <div className="detail-head"><h2>Keypad commands</h2><span className="badge">[*] menu</span></div>
-      <p className="desc">Every menu starts with the <strong>[*]</strong> key. Pick a command to see where it leads, or press the keys on the keypad.</p>
-      <h3>Commands</h3>
+      <div className="detail-head"><h2>Keypad commands</h2>{copy.overviewBadge ? <span className="badge">{copy.overviewBadge}</span> : null}</div>
+      <p className="desc">{copy.overviewDesc}</p>
+      <h3>{copy.commandsHeading}</h3>
       <div className="table-wrap"><table>
         <thead><tr><th>Keys</th><th>What it opens</th></tr></thead>
         <tbody>
@@ -171,20 +173,21 @@ function SectionDetail(props: BodyProps & { groupLabel: string; sourceText: stri
   );
 }
 
-export function DetailPanel({ model, focus, location, worksheet, sourceText, on }: Props) {
+export function DetailPanel({ model, copy, focus, location, worksheet, sourceText, on }: Props) {
   const node = findNode(model, focus.nodeId);
   let body: ReactNode;
   if (!node || node.command?.slug === INSTALLER_COMMAND) {
-    body = focus.isInstallerTop
+    // The installer help describes DSC programming; other panels show the overview instead.
+    body = focus.isInstallerTop && copy.hasInstallerHelp
       ? <InstallerHelp model={model} sourceText={sourceText} on={on} />
-      : <KeypadOverview model={model} sourceText={sourceText} on={on} />;
+      : <KeypadOverview model={model} copy={copy} sourceText={sourceText} on={on} />;
   } else if (node.command) {
     body = <CommandDetail model={model} command={node.command} sourceText={sourceText} on={on} />;
   } else {
     const num = location.sectionNum ?? node.section.num ?? node.section.range?.[0] ?? 0;
     body = (
       <SectionDetail
-        model={model} section={node.section} num={num} subCode={location.subCode} focus={focus} worksheet={worksheet}
+        model={model} copy={copy} section={node.section} num={num} subCode={location.subCode} focus={focus} worksheet={worksheet}
         groupLabel={node.groupLabel} sourceText={sourceText} on={on}
       />
     );

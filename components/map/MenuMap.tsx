@@ -8,6 +8,7 @@ import type { KeypadModelDef, PanelModelData } from "@/lib/content/types";
 import { getEngine } from "@/lib/engines";
 import type { Focus, Worksheet } from "@/lib/engines/types";
 import { copyWorksheet, loadWorksheet, saveWorksheet } from "@/lib/worksheet";
+import { readMapCopy } from "./copy";
 import { DetailPanel } from "./DetailPanel";
 import type { DetailActions } from "./SectionBodies";
 import { Search } from "./Search";
@@ -44,6 +45,7 @@ function buildMapUrl(basePath: string, sectionNum: number | null, subCode: strin
 // The menu map: search, section tree, "you are here", keypad and detail, all driven by one engine state.
 export function MenuMap({ model, keypad, start, basePath, subtitle, sourceText }: Props) {
   const engine = getEngine(model.engineKey);
+  const copy = readMapCopy(model.engineKey);
   const hostRef = useRef<KeypadHandle>(null);
   const isLoaded = useRef(false);
 
@@ -106,9 +108,9 @@ export function MenuMap({ model, keypad, start, basePath, subtitle, sourceText }
         <Search model={model} onPick={(hit: SearchHit) => pickNode(hit.id, hit.num ?? undefined)} />
       </header>
       <div className="layout">
-        <Tree model={model} currentId={focus.nodeId} onPick={(id) => pickNode(id)} />
+        <Tree model={model} copy={copy} currentId={focus.nodeId} onPick={(id) => pickNode(id)} />
         <main className="main">
-          <WherePanel location={location} trail={focus.trail} onCrumb={(target) => apply((s) => engine.followCrumb?.(s, model, target) ?? s)} />
+          <WherePanel legend={copy.legend} location={location} trail={focus.trail} onCrumb={(target) => apply((s) => engine.followCrumb?.(s, model, target) ?? s)} />
           <div className="keypad-wrap">
             <KeypadHost ref={hostRef} model={model} engineKey={model.engineKey} keypad={keypad} initialState={initialState} onStateChange={handleStateChange}>
               <button type="button" onClick={() => apply((s) => engine.resetKeypad?.(s) ?? s)}>Reset keypad</button>
@@ -116,7 +118,7 @@ export function MenuMap({ model, keypad, start, basePath, subtitle, sourceText }
             </KeypadHost>
             <p className="keypad-note">Press the keys the same way as on your real keypad, or use your keyboard: digits, * and #. Esc works as #.</p>
           </div>
-          <DetailPanel model={model} focus={focus} location={location} worksheet={worksheet} sourceText={sourceText} on={actions} />
+          <DetailPanel model={model} copy={copy} focus={focus} location={location} worksheet={worksheet} sourceText={sourceText} on={actions} />
         </main>
       </div>
     </>

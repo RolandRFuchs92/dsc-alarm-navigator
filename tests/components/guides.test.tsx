@@ -33,6 +33,14 @@ describe("StepCard", () => {
     expect(screen.getByRole("note").textContent).toContain("Careful.");
     expect(screen.getByRole("link", { name: /View this section/ }).getAttribute("href")).toBe("/devices/pc1864/map/201");
   });
+
+  it("an IDS step links to the location, unpadded in the text", () => {
+    const step: GuideStep = { position: 2, title: "Open zones 9 to 16", keys: "2 *", note: null, warning: null, sectionRef: 2 };
+    render(<StepCard step={step} number={2} count={10} modelSlug="x64" engineKey="ids-xseries" />);
+    const link = screen.getByRole("link", { name: "View this location [2]" });
+    expect(link.getAttribute("href")).toBe("/devices/x64/map/002");
+    expect(screen.queryByText(/View this section/)).toBeNull();
+  });
 });
 
 describe("StepNav", () => {

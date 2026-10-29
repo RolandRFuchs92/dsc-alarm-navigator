@@ -1,9 +1,10 @@
 import type { Focus, Location } from "@/lib/engines/types";
+import type { MapCopy } from "./copy";
 
-type Props = { location: Location; trail: Focus["trail"]; onCrumb: (target: string) => void };
+type Props = { legend: MapCopy["legend"]; location: Location; trail: Focus["trail"]; onCrumb: (target: string) => void };
 
 // "You are here": crumbs, what the panel is waiting for, and the keys pressed to get here.
-export function WherePanel({ location, trail, onCrumb }: Props) {
+export function WherePanel({ legend, location, trail, onCrumb }: Props) {
   return (
     <section className="panel where" aria-live="polite">
       <p className="eyebrow">You are here</p>
@@ -29,8 +30,7 @@ export function WherePanel({ location, trail, onCrumb }: Props) {
         )) : <li><small>Nothing pressed yet</small></li>}
       </ol>
       <p className="led-legend">
-        <span><i className="dot armed" />Armed light on = waiting for a section number</span>
-        <span><i className="dot ready" />Ready light on = waiting for data (flashing = HEX)</span>
+        {legend.map((item) => <span key={item.text}>{item.dot ? <i className={`dot ${item.dot}`} /> : null}{item.text}</span>)}
       </p>
     </section>
   );

@@ -3,6 +3,7 @@
 import { describeInstance, formatSection, readEntries, readLookup, readOptions, readValueKey } from "@/lib/content/format";
 import type { EntryDef, PanelModelData, SectionDef } from "@/lib/content/types";
 import type { Focus, Worksheet } from "@/lib/engines/types";
+import type { MapCopy } from "./copy";
 
 // Row clicks; left out when the engine can't do them, and then the rows aren't clickable.
 export type DetailActions = {
@@ -15,6 +16,7 @@ export type DetailActions = {
 
 export type BodyProps = {
   model: PanelModelData;
+  copy: MapCopy;
   section: SectionDef;
   num: number;
   subCode: string | null;
@@ -158,14 +160,14 @@ export function PhoneBody({ num, focus, worksheet }: BodyProps) {
   );
 }
 
-export function ToggleBody({ section, num, worksheet, on }: BodyProps) {
+export function ToggleBody({ copy, section, num, worksheet, on }: BodyProps) {
   const options = readOptions(section, num);
   const saved = worksheet.toggles[String(num)];
   const set = new Set(saved ?? options.filter((o) => o.def).map((o) => o.n));
   return (
     <>
       <h3>Options</h3>
-      <span className="picker-label">Click a row, or press its number on the keypad, to flip it. The keypad screen shows the number when ON and a dash when OFF.</span>
+      <span className="picker-label">{copy.toggleHint}</span>
       <div className="table-wrap"><table>
         <thead><tr><th className="num">Opt</th><th>When ON</th><th>When OFF</th><th>Default</th><th>Yours</th></tr></thead>
         <tbody>
