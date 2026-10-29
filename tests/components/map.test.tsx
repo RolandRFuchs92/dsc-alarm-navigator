@@ -92,10 +92,19 @@ describe("map copy per engine", () => {
     renderMap(x64, { section: 109, sub: null, command: null });
     expect(document.body.textContent).not.toContain("Click a row");
     expect(document.body.textContent).not.toContain("a dash when OFF");
-    expect(document.body.textContent).toContain("Type a light number then [*] on the keypad to switch it.");
+    expect(document.body.textContent).toContain("Type a light number then [*] on the keypad to switch it (not confirmed on a real panel).");
     cleanup();
     renderMap(pc1864, { section: 13, sub: null, command: null });
     expect(document.body.textContent).toContain("The keypad screen shows the number when ON and a dash when OFF.");
+  });
+
+  it("X64 zone properties show no DSC [9] then [n] key hints; DSC [101] keeps them", () => {
+    renderMap(x64, { section: 109, sub: null, command: null });
+    expect(document.body.textContent).toContain("Buzz Profile 4");
+    expect(document.body.textContent).not.toContain("[9] then [");
+    cleanup();
+    renderMap(pc1864, { section: 101, sub: null, command: null });
+    expect(document.body.textContent).toContain("[9] then [1]");
   });
 });
 

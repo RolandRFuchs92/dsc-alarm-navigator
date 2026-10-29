@@ -176,7 +176,7 @@ export function ToggleBody({ copy, section, num, worksheet, on }: BodyProps) {
             const keyHint = o.n > 8 ? `[9] then [${o.n - 8}]` : `[${o.n}]`;
             return (
               <tr key={o.n} className={buildRowClass(!!on.pickOption, o.future ? " is-future" : "")} onClick={on.pickOption ? () => on.pickOption!(o.n) : undefined}>
-                <td className="num">{o.n}{section.pages === 2 ? <span className="meaning">{keyHint}</span> : null}</td>
+                <td className="num">{o.n}{copy.hasPageKeys && section.pages === 2 ? <span className="meaning">{keyHint}</span> : null}</td>
                 <td>{o.on}</td>
                 <td>{o.off || ""}</td>
                 <td><span className={`pill ${o.def ? "on" : "off"}`}>{o.def ? "ON" : "OFF"}</span></td>

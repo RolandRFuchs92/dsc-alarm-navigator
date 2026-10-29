@@ -11,6 +11,7 @@ export type MapCopy = {
   commandsHeading: string;
   hasInstallerHelp: boolean; // the DSC "How installer programming works" pane at Enter Section
   toggleHint: string; // above the options table
+  hasPageKeys: boolean; // options 9-16 are reached with [9] then [n] (DSC 2-page toggle sections)
   sectionLink: (ref: number) => string; // a guide step's link into the map
 };
 
@@ -28,6 +29,7 @@ const DSC_COPY: MapCopy = {
   commandsHeading: "Commands",
   hasInstallerHelp: true,
   toggleHint: "Click a row, or press its number on the keypad, to flip it. The keypad screen shows the number when ON and a dash when OFF.",
+  hasPageKeys: true,
   sectionLink: (ref) => `View this section [${padded(ref)}]`,
 };
 
@@ -49,8 +51,10 @@ const IDS_COPY: MapCopy = {
   ),
   commandsHeading: "User program options",
   hasInstallerHelp: false,
-  // §8 Programming a Bitmapped Location; the engine flips light N with [N] [*] (§7).
-  toggleHint: "Type a light number then [*] on the keypad to switch it. A lit zone light is ON.",
+  // The installer manual (§8 Programming a Bitmapped Location) doesn't say how a bit is flipped; the engine uses
+  // [N] [*] as in the user manual's bypass procedure (§5), so it is unverified on the real panel.
+  toggleHint: "Type a light number then [*] on the keypad to switch it (not confirmed on a real panel). A lit zone light is ON.",
+  hasPageKeys: false, // all 16 zone lights show at once (Table 23)
   sectionLink: (ref) => `View this location [${ref}]`,
 };
 
