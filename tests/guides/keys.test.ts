@@ -65,3 +65,25 @@ describe("formatKeycaps", () => {
     expect(() => formatKeycaps("F1", "dsc-powerseries")).toThrow(KeyTokenError);
   });
 });
+
+describe("IDS X-Series keys", async () => {
+  const { getPanelModel } = await import("@/lib/content/repo");
+  const x64 = (await getPanelModel("x64"))!;
+
+  it("replays {master} and {new-code} for the X64", () => {
+    expect(parseKeys("hold* {master} * {new-code} *", x64)).toEqual(["hold*", "1", "2", "3", "4", "*", "4", "3", "2", "1", "*"]);
+    expect(parseKeys("{user-code}", x64)).toEqual(["1", "2", "3", "4"]);
+  });
+
+  it("rejects F and < on the X64", () => {
+    expect(() => parseKeys("f", x64)).toThrow(KeyTokenError);
+    expect(() => parseKeys("<", x64)).toThrow(KeyTokenError);
+  });
+
+  it("labels the IDS placeholders", () => {
+    expect(formatKeycaps("{user-code} {new-code}", "ids-xseries")).toEqual([
+      { label: "the code to change", placeholder: true },
+      { label: "the new code", placeholder: true },
+    ]);
+  });
+});

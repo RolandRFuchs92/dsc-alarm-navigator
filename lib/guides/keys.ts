@@ -7,7 +7,11 @@ import { getEngine } from "@/lib/engines";
 // Maps, not object literals: `in` would also match prototype keys such as "constructor".
 const PLACEHOLDER_LABELS = new Map<string, string>([["{installer}", "installer code"], ["{master}", "master code"]]);
 // Extra placeholders per engine key; {installer} and {master} work for every engine.
-const ENGINE_PLACEHOLDERS = new Map<string, Map<string, string>>();
+const ENGINE_PLACEHOLDERS = new Map<string, Map<string, string>>([
+  ["ids-xseries", new Map([["{user-code}", "the code to change"], ["{new-code}", "the new code"]])],
+]);
+// What a placeholder replays as. Engine placeholders only reach here after splitTokens accepted them for the engine.
+const NEW_CODE_REPLAY = "4321";
 // Keys that guides never name, because a guide can't know which programming mode they'd enter.
 const FORBIDDEN_GUIDE_KEYS = new Set<string>(["f", "m", "p"]);
 const KEYCAP_LABELS = new Map<string, string>([["hold*", "hold *"], ["hold9", "hold 9"], ["mode", "MODE"]]);
@@ -41,7 +45,12 @@ function splitTokens(keys: string, engineKey: string): string[] {
 
 // "* 8 {installer}" → ["*", "8", "5", "5", "5", "5"] using the model's default codes.
 export function parseKeys(keys: string, model: PanelModelData): Key[] {
-  const codes = new Map<string, string>([["{installer}", model.installerCodeDefault], ["{master}", model.masterCodeDefault]]);
+  const codes = new Map<string, string>([
+    ["{installer}", model.installerCodeDefault],
+    ["{master}", model.masterCodeDefault],
+    ["{user-code}", model.masterCodeDefault], // the code to change: the master code is the one code a fresh panel has
+    ["{new-code}", NEW_CODE_REPLAY],
+  ]);
   const result = splitTokens(keys, model.engineKey).flatMap((t) => codes.get(t)?.split("") ?? [t]) as Key[];
   return result;
 }

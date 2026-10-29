@@ -1,9 +1,11 @@
 import { dscPowerSeriesEngine } from "./dsc-powerseries";
+import { idsXSeriesEngine } from "./ids-xseries";
 import type { PanelEngine } from "./types";
 
 // Panel family engine_key → engine. A new panel family means a new engine here.
 const ENGINES: Record<string, PanelEngine<unknown>> = {
   "dsc-powerseries": dscPowerSeriesEngine as PanelEngine<unknown>,
+  "ids-xseries": idsXSeriesEngine as PanelEngine<unknown>,
 };
 
 export function getEngine(engineKey: string): PanelEngine<unknown> {
