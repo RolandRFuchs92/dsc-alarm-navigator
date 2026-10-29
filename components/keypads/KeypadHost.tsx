@@ -60,8 +60,12 @@ export function KeypadHost({ model, engineKey, keypad, initialState, onStateChan
   }, [state, engine, model]);
 
   useEffect(() => {
-    // Keys held on the keyboard: key -> time of keydown, for engines that have hold keys (IDS * and 9).
-    const downAt = new Map<string, number>();
+    // Keys held on the keyboard, by physical key (event.code): "*" is Shift+8, and Shift may be released before 8.
+    const downAt = new Map<string, { key: string; at: number }>();
+    function getPhysical(event: KeyboardEvent, key: string): string {
+      const result = event.code || key;
+      return result;
+    }
     function findButton(key: string): Element | null | undefined {
       const result = wrapRef.current?.querySelector(`[data-key="${CSS.escape(key)}"]`);
       return result;
@@ -86,24 +90,28 @@ export function KeypadHost({ model, engineKey, keypad, initialState, onStateChan
         setTimeout(() => button.classList.remove("pressed"), 120);
       }
       if (checkHoldable(key)) {
-        if (!event.repeat && !downAt.has(key)) downAt.set(key, Date.now());
+        if (!event.repeat) downAt.set(getPhysical(event, key), { key, at: Date.now() });
         return;
       }
       dispatch({ type: "key", key: key as Key });
     }
     function handleKeyup(event: KeyboardEvent) {
-      const key = parseKey(event);
-      const start = key ? downAt.get(key) : undefined;
-      if (!key || start === undefined) return;
-      downAt.delete(key);
-      const held = Date.now() - start >= HOLD_MS;
-      dispatch({ type: "key", key: (held ? `hold${key}` : key) as Key });
+      // The released character can differ from the pressed one (Shift released first gives "8" for "*"), so match by code.
+      const down = [event.code, KEY_ALIASES[event.key] ?? event.key].map((id) => (id ? downAt.get(id) : undefined)).find(Boolean);
+      if (!down || parseKey(event) === null) return;
+      downAt.delete(getPhysical(event, down.key));
+      downAt.delete(down.key);
+      const held = Date.now() - down.at >= HOLD_MS;
+      dispatch({ type: "key", key: (held ? `hold${down.key}` : down.key) as Key });
     }
+    function handleBlur() { downAt.clear(); }
     document.addEventListener("keydown", handleKeydown);
     document.addEventListener("keyup", handleKeyup);
+    window.addEventListener("blur", handleBlur);
     return () => {
       document.removeEventListener("keydown", handleKeydown);
       document.removeEventListener("keyup", handleKeyup);
+      window.removeEventListener("blur", handleBlur);
     };
   }, [engine]);
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { act } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { IdsClassicLed } from "@/components/keypads/IdsClassicLed";
 import { KeypadHost, applyEngineKey } from "@/components/keypads/KeypadHost";
 import { convertLegacy, loadLegacyData } from "@/scripts/convert-legacy";
@@ -179,33 +179,57 @@ describe("KeypadHost key handling", () => {
 });
 
 describe("KeypadHost IDS keyboard long press", () => {
+  // The X64 model comes from the test DB, so load it before fake timers are installed.
+  let model: Awaited<ReturnType<typeof import("@/lib/content/repo").getPanelModel>>;
+  beforeAll(async () => {
+    const { getPanelModel } = await import("@/lib/content/repo");
+    model = await getPanelModel("x64");
+  });
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  async function renderIdsHost() {
-    const { getPanelModel } = await import("@/lib/content/repo");
-    const model = (await getPanelModel("x64"))!;
-    const states: unknown[] = [];
-    render(<KeypadHost model={model} engineKey="ids-xseries" keypad={model.keypads[0]} onStateChange={(s) => states.push(s)} />);
-    return states;
+  function renderIdsHost() {
+    const modes: string[] = [];
+    render(<KeypadHost model={model!} engineKey="ids-xseries" keypad={model!.keypads[0]} onStateChange={(s) => modes.push((s as { mode: string }).mode)} />);
+    return () => modes[modes.length - 1];
   }
+  const press = (key: string, code: string, ms: number, upKey = key) => {
+    fireEvent.keyDown(document, { key, code });
+    act(() => { vi.advanceTimersByTime(ms); });
+    fireEvent.keyUp(document, { key: upKey, code });
+  };
 
-  it("holding * for 1 s then releasing sends hold*, a short press sends * on release only", async () => {
-    vi.useRealTimers();
-    const states = await renderIdsHost();
-    vi.useFakeTimers();
-    const base = states.length;
-    fireEvent.keyDown(document, { key: "*" });
-    expect(states.length).toBe(base);
-    act(() => { vi.advanceTimersByTime(200); });
-    fireEvent.keyUp(document, { key: "*" });
-    const afterShort = states.length;
-    expect(afterShort).toBeGreaterThan(base);
-    fireEvent.keyDown(document, { key: "*" });
-    fireEvent.keyDown(document, { key: "*", repeat: true });
-    act(() => { vi.advanceTimersByTime(1000); });
-    expect(states.length).toBe(afterShort);
-    fireEvent.keyUp(document, { key: "*" });
-    expect(states.length).toBeGreaterThan(afterShort);
+  it("a short * press is the plain key; a 1 s hold of * reaches user program mode", () => {
+    const mode = renderIdsHost();
+    expect(mode()).toBe("idle");
+    press("*", "Digit8", 200);
+    expect(mode()).toBe("idle");
+    press("*", "Digit8", 1000);
+    expect(mode()).toBe("userCode");
+  });
+
+  it("the plain key is sent on release, not on keydown", () => {
+    const mode = renderIdsHost();
+    fireEvent.keyDown(document, { key: "9", code: "Digit9" });
+    expect(mode()).toBe("idle");
+    fireEvent.keyUp(document, { key: "9", code: "Digit9" });
+    expect(mode()).toBe("idle");
+  });
+
+  it("Shift released before 8 leaves no stale entry: the next short * is not a hold", () => {
+    const mode = renderIdsHost();
+    press("*", "Digit8", 50, "8");
+    act(() => { vi.advanceTimersByTime(2000); });
+    press("*", "Digit8", 100);
+    expect(mode()).toBe("idle");
+  });
+
+  it("a keydown whose keyup never arrived does not turn the next short press into a hold", () => {
+    const mode = renderIdsHost();
+    fireEvent.keyDown(document, { key: "*", code: "Digit8" });
+    act(() => { vi.advanceTimersByTime(2000); });
+    window.dispatchEvent(new Event("blur"));
+    press("*", "Digit8", 100);
+    expect(mode()).toBe("idle");
   });
 });
