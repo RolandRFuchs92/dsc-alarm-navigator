@@ -11,6 +11,7 @@ type Handler = (state: IdsState, key: Key, model: PanelModelData) => IdsState;
 export const USER_SLOTS = 128;
 // §5 step 7: [*] pages through zones 1-16, 17-32, 33-48, 49-64.
 const BYPASS_PAGES = 4;
+const BYPASS_ZONES = BYPASS_PAGES * LIGHTS_PER_PAGE; // zones 1-64
 const SLOT_DIGITS = 3;
 const OPTION_DIGITS = 2; // Table 5 lists options up to 41
 // §9 option headings; only options 0-4 are simulated. Option 5 shows the slot on the zone lights (Table 2), not simulated.
@@ -169,20 +170,21 @@ export const USER_HANDLERS: Partial<Record<Mode, Handler>> = {
     if (key !== "*") return state;
     if (findSlot(state, state.buffer) === null) return beepError(state);
     const path = [{ key: "hold9", label: "Bypass" }, { key: maskCode(state.buffer), label: "User code" }, { key: "*", label: "" }];
-    const result: IdsState = { ...state, mode: "bypass", buffer: "", page: 1, pageCount: BYPASS_PAGES, path };
+    const result: IdsState = { ...state, mode: "bypass", buffer: "", page: 1, pageCount: BYPASS_PAGES, lastBypassZone: null, path };
     return result;
   },
 
-  // §5 steps 5-9: [ZONE] [*] toggles the zone's light, [*] alone pages, [#] exits.
+  // §5 steps 5-9: [ZONE NUMBER] [*] toggles that zone (1-64), [*] alone pages the lights through zones 1-16, 17-32,
+  // 33-48, 49-64 and wraps, [#] exits. §5 doesn't spell out how paging and zone numbers interact: ruling, a zone number
+  // is the real zone wherever it is, and the lights keep showing the current page.
   bypass(state, key) {
     if (key === "#") return resetToIdle(state);
     if (isDigit(key)) return typeDigit(state, key, 2);
     if (key !== "*") return state;
     if (!state.buffer) return { ...state, page: (state.page % BYPASS_PAGES) + 1 };
-    const light = Number(state.buffer);
-    if (light < 1 || light > LIGHTS_PER_PAGE) return beepError(state);
-    const zone = (state.page - 1) * LIGHTS_PER_PAGE + light;
-    const result: IdsState = { ...state, bypassed: flipNumber(state.bypassed, zone), buffer: "" };
+    const zone = Number(state.buffer);
+    if (zone < 1 || zone > BYPASS_ZONES) return beepError(state);
+    const result: IdsState = { ...state, bypassed: flipNumber(state.bypassed, zone), lastBypassZone: zone, buffer: "" };
     return result;
   },
 };

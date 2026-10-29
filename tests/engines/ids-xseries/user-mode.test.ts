@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IdsState } from "@/lib/engines/ids-xseries/state";
-import { createIdle, engine, model, press, readLeds, readLitZones } from "./helpers";
+import { createIdle, engine, model, press, readLeds, readLitZones, readVerified } from "./helpers";
 
 const focusOf = (state: IdsState) => engine.selectFocus!(state, model);
 const locationOf = (state: IdsState) => engine.selectLocation(state, model);
@@ -205,14 +205,44 @@ describe("IDS X-Series: bypass (user manual §5, LED keypad)", () => {
     const on = press(bypass(), "2 *");
     expect(readLitZones(on)).toEqual([2]);
     expect(readLitZones(press(on, "2 *"))).toEqual([]);
+    expect(readVerified(on)).toBe(true);
     const page2 = press(on, "*");
     expect(focusOf(page2).mode).toBe("bypass");
     expect(readLitZones(page2)).toEqual([]);
-    expect(readLitZones(press(page2, "3 *"))).toEqual([3]);
     const idle = press(page2, "#");
     expect(focusOf(idle).mode).toBe("idle");
     expectNoCodes(idle);
     expect(engine.selectWorksheet(press(page2, "3 * #"))).toEqual({ values: {}, toggles: {} });
+  });
+
+  // Ruling: [ZONE NUMBER] [*] takes real zone numbers 1-64; the lights show the current page.
+  it("1 9 * on page 1 bypasses zone 19; page 2 shows light 3, unverified", () => {
+    const zone19 = press(bypass(), "1 9 *");
+    expect(focusOf(zone19).beep).toBeNull();
+    expect(readLitZones(zone19)).toEqual([]);
+    expect(readVerified(zone19)).toBe(false); // the last zone toggled is not on this page
+    const page2 = press(zone19, "*");
+    expect(readLitZones(page2)).toEqual([3]);
+    expect(readVerified(page2)).toBe(false);
+    expect(readLeds(page2)).toEqual({ ready: "on", armed: "off", away: "off", power: "on" }); // no page markers
+  });
+
+  it("3 * on page 2 toggles zone 3, not zone 19", () => {
+    const page2 = press(bypass(), "*");
+    const state = press(page2, "3 *");
+    expect(readLitZones(state)).toEqual([]);
+    expect(readLitZones(press(state, "* * *"))).toEqual([3]); // back on page 1
+  });
+
+  it("zone 0 or 65 gives the error beep", () => {
+    expect(focusOf(press(bypass(), "6 5 *")).beep).toBe("error");
+    expect(focusOf(press(bypass(), "0 *")).beep).toBe("error");
+  });
+
+  it("* from page 4 wraps to page 1", () => {
+    const state = press(bypass(), "2 * * * * *");
+    expect(readLitZones(state)).toEqual([2]);
+    expect(readVerified(state)).toBe(true);
   });
 });
 

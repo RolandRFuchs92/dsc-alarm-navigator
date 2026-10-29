@@ -96,10 +96,13 @@ function computeZoneLights(state: IdsState, model: PanelModelData): { on: number
     return result;
   }
   if (state.mode === "bypass") {
-    // User manual §5 steps 3 and 7: the bypassed zones' lights on this page.
+    // User manual §5 steps 3 and 7: the bypassed zones' lights on this page. §5 doesn't spell out paging with zone
+    // numbers, so pages above 1, and a last-toggled zone off this page, are unverified (ruling).
     const offset = (state.page - 1) * LIGHTS_PER_PAGE;
-    const on = state.bypassed.filter((n) => n > offset && n <= offset + LIGHTS_PER_PAGE).map((n) => n - offset);
-    const result = { on, verified: !state.buffer };
+    const onPage = (n: number): boolean => n > offset && n <= offset + LIGHTS_PER_PAGE;
+    const on = state.bypassed.filter(onPage).map((n) => n - offset);
+    const lastOffPage = state.lastBypassZone !== null && !onPage(state.lastBypassZone);
+    const result = { on, verified: !state.buffer && state.page === 1 && !lastOffPage };
     return result;
   }
   // Idle shows zone status (no zone open); program-mode top shows nothing. The user manual doesn't describe the zone
@@ -143,7 +146,7 @@ function describeWaiting(state: IdsState, model: PanelModelData): string {
     userTop: () => `${unsimulated}You are in user program mode (READY flashing). Type an option number (0-4) then *, or # to leave.`,
     userOption: () => describeUserOption(state, codeDigits),
     bypassCode: () => `Type any user code (${codeDigits} digits) then * to open bypass. # cancels.`,
-    bypass: () => `You are in bypass, zones ${(state.page - 1) * LIGHTS_PER_PAGE + 1}-${state.page * LIGHTS_PER_PAGE}. Type a zone light number (1-16) then * to bypass or un-bypass it, * alone for the next 16 zones, # when done.`,
+    bypass: () => `You are in bypass, zones ${(state.page - 1) * LIGHTS_PER_PAGE + 1}-${state.page * LIGHTS_PER_PAGE}. Type a zone number (1-64) then * to bypass or un-bypass it, * alone to show the next 16 zones, # when done.`,
   };
   const result = views[state.mode]();
   return result;

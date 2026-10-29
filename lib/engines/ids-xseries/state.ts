@@ -29,6 +29,7 @@ export type IdsState = {
   // User codes by slot (1-128), in memory only: never read from or written to a worksheet (ruling).
   codes: Record<number, string>;
   bypassed: number[]; // bypassed zones (user manual §5); not in the worksheet either
+  lastBypassZone: number | null; // the zone last toggled in bypass, to tell whether its light is on this page
   userOption: number | null; // the user program option open in userOption mode
   userSlot: number | null; // Option 1's old code slot or Option 3's slot, once accepted (second step)
   unsimulatedOption: number | null; // the option just refused because it isn't simulated
@@ -58,6 +59,7 @@ export function createInitialState(model: PanelModelData, worksheet?: Worksheet)
     toggles,
     codes: {},
     bypassed: [],
+    lastBypassZone: null,
     userOption: null,
     userSlot: null,
     unsimulatedOption: null,
