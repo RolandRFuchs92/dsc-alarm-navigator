@@ -8,6 +8,7 @@ import { convertLegacy, loadLegacyData } from "@/scripts/convert-legacy";
 import { getEngine } from "@/lib/engines";
 import { Pk5500 } from "@/components/keypads/Pk5500";
 import { PkLed } from "@/components/keypads/PkLed";
+import { StatusLeds } from "@/components/keypads/StatusLeds";
 import { getKeypadComponent } from "@/components/keypads";
 import type { Display, Key, Leds } from "@/lib/engines/types";
 
@@ -50,6 +51,13 @@ describe("keypad faces", () => {
     render(<PkLed display={display} leds={LEDS} onKey={() => {}} name="PK5508" />);
     expect(screen.getAllByTestId("zone-light")).toHaveLength(8);
     expect(screen.getByText(/unverified/i)).toBeTruthy();
+  });
+
+  it("StatusLeds draws a light the engine didn't name as off", () => {
+    const { container } = render(<StatusLeds leds={{ ready: "on" }} />);
+    const spans = Array.from(container.querySelectorAll(".led"));
+    expect(spans.map((el) => el.getAttribute("data-state"))).toEqual(["on", "off", "off", "off"]);
+    expect(spans[1].className).toBe("led armed");
   });
 
   it("getKeypadComponent maps component keys and rejects unknown ones", () => {
@@ -145,6 +153,11 @@ describe("IdsClassicLed", () => {
     expect(fireEvent.contextMenu(btn("*"))).toBe(false);
     expect(fireEvent.contextMenu(btn("9"))).toBe(false);
     expect(fireEvent.contextMenu(btn("1"))).toBe(true);
+  });
+
+  it("notes under the keys that F, M and P are real alarms the simulator ignores", () => {
+    renderIds();
+    expect(screen.getByText("F, M and P raise real alarms when held; the simulator ignores them.")).toBeTruthy();
   });
 
   it("F, M, P are disabled and send nothing", () => {

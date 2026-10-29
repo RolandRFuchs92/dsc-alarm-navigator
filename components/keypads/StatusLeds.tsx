@@ -16,12 +16,15 @@ export function pickLedClass(id: string, state: LedState): string {
 export function StatusLeds({ leds }: { leds: Leds }) {
   return (
     <div className="leds">
-      {LED_ORDER.map((l) => (
-        <span key={l.id} className={pickLedClass(l.id, leds[l.id])} data-state={leds[l.id]}>
-          <i />
-          {l.label}
-        </span>
-      ))}
+      {LED_ORDER.map((l) => {
+        const state = leds[l.id] ?? "off"; // a light the engine doesn't name is off
+        return (
+          <span key={l.id} className={pickLedClass(l.id, state)} data-state={state}>
+            <i />
+            {l.label}
+          </span>
+        );
+      })}
     </div>
   );
 }

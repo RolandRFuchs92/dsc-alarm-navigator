@@ -62,6 +62,7 @@ export function IdsClassicLed({ display, leds, onKey, name, children }: KeypadPr
               <button key={k} type="button" data-key={k.toLowerCase()} disabled title={DISABLED_TITLE}>{k}</button>
             ))}
           </div>
+          <p className="ids-note">F, M and P raise real alarms when held; the simulator ignores them.</p>
         </div>
       </div>
       {children ? <div className="keypad-foot">{children}</div> : null}

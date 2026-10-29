@@ -58,7 +58,8 @@ function isValidNewCode(state: IdsState, code: string, slot: number | null): boo
   return result;
 }
 
-// §9 Option 2 step 4: "deleting" slot 1 reprograms it to the default (1234, or 123456 with 6-digit codes).
+// §9 Option 2 step 4: "deleting" slot 1 reprograms it to 1234. The manual only says 1234 there; with 6-digit codes the
+// engine uses 123456 instead, a ruling based on the 6-digit master default in §9 step 4 and Table 12.
 function deleteSlot(state: IdsState, slot: number, model: PanelModelData): IdsState {
   const codes = { ...state.codes };
   if (slot === 1) codes[1] = readMasterDefault(model, readCodeLength(state));
