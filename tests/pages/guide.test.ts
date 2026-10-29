@@ -66,6 +66,12 @@ describe("guide page", () => {
     expect(renderToStaticMarkup(await openGuide("pc1864", "create-partition", ["4", "5"]))).toContain("Step 4 of 11");
   });
 
+  it("x64 change-user-code step 2 shows the hold * keycap", async () => {
+    const html = renderToStaticMarkup(await openGuide("x64", "change-user-code", "2"));
+    expect(html).toContain("Step 2 of 7");
+    expect(html).toContain("hold *");
+  });
+
   it("step 4 shows its warning", async () => {
     const html = renderToStaticMarkup(await openGuide("pc1864", "create-partition", "4"));
     expect(html).toContain("only arms when both are armed");

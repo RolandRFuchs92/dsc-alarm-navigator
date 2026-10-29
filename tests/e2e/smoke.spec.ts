@@ -77,6 +77,19 @@ test("sign-up, approval, guide, map, revoke, with a clean CSP", async ({ browser
   await user.goto("/devices/pc1864/map/211");
   await expect(user.getByText("Partition 2, zones 9-16").first()).toBeVisible();
 
+  // The IDS X64 guide shows the Classic LED keypad.
+  await user.goto("/devices/x64/guides/add-zone?step=6");
+  await expect(user.locator('[aria-label*="Classic"]').first()).toBeVisible();
+
+  // On the X64 map the keypad is idle: enter user program mode, hold * is a release-send, light 9 comes on.
+  await user.goto("/devices/x64/map/201");
+  const face = user.locator('[aria-label*="Classic"]').first();
+  await expect(face).toBeVisible();
+  for (const key of ["#", "9", "9", "9", "9", "*", "2", "0", "1", "*", "9", "*"]) {
+    await face.locator(`button[data-key="${key}"]`).click();
+  }
+  await expect(face.getByTestId("zone-light").filter({ hasText: /^9$/ })).toHaveAttribute("data-state", "on");
+
   // The admin revokes B; B's next navigation is gated.
   await admin.goto("/admin/users");
   await row.getByRole("button", { name: "Revoke" }).click();

@@ -101,8 +101,10 @@ npm run db:new guide_<slug>       # e.g. guide_add_user_code -> migrations/005_g
 - One `INSERT INTO guide` (panel model, `slug`, `title`, `summary`, `danger`, `verified`, `position`)
   and one `INSERT INTO guide_step` with a row per step (`position`, `title`, `keys`, `note`,
   `warning`, `section_ref`). Use `$q$…$q$` quoting for text.
-- **Keys** are space-separated tokens. The only valid tokens are `0`–`9`, `*`, `#`, `<`, `>`,
-  `{installer}` and `{master}` (the code placeholders the keypad fills in). Anything else is rejected.
+- **Keys** are space-separated tokens, and the valid set depends on the panel. DSC: `0`-`9`, `*`, `#`,
+  `<`, `>`. IDS: `0`-`9`, `*`, `#`, `mode`, `hold*`, `hold9`. Placeholders (filled in by the keypad):
+  `{installer}` and `{master}` on every panel, plus `{user-code}` and `{new-code}` on IDS. F, M and P
+  (panic, medical, fire) are never allowed. Anything else is rejected.
 - `section_ref` is the section number the step works in (it links to the map), or `NULL`.
 - A new guide ships with `verified = false`, so it shows an "unverified" badge. Only flip it after
   running the guide on a real panel. Never invent panel behaviour.
