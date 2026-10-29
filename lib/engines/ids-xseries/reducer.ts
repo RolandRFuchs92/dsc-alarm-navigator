@@ -13,6 +13,7 @@ import {
   readEntries,
   readEntryDigits,
   readInstallerCode,
+  readMasterDefault,
   readOptions,
   readSection,
   readToggleSet,
@@ -20,14 +21,15 @@ import {
   resetToIdle,
 } from "./state";
 import type { IdsState, Mode } from "./state";
+import { USER_HANDLERS, applyHoldKey } from "./user-mode";
 
 type Handler = (state: IdsState, key: Key, model: PanelModelData) => IdsState;
 
 const isDigit = (key: Key): boolean => /^\d$/.test(key);
 
-// Keys with no installer-programming meaning. F, M and P are panic keys and < > are DSC keys; hold * (user
-// program mode) and hold 9 (bypass) come with those modes. They leave the state exactly as it was.
-const IGNORED_KEYS = new Set<string>(["<", ">", "f", "m", "p", "hold*", "hold9"]);
+// Keys with no programming meaning. F, M and P are panic keys and < > are DSC keys. They leave the state exactly as it was.
+const IGNORED_KEYS = new Set<string>(["<", ">", "f", "m", "p"]);
+const HOLD_KEYS = new Set<string>(["hold*", "hold9"]);
 // Location numbers are typed as up to 3 digits (locations 0-999 in the §9 summary).
 const LOCATION_DIGITS = 3;
 // Ruling on zone type 09: the valid-range line under Table 7 says 00-05, 08, 10-15 and Table 5 adds 09 (new).
@@ -72,11 +74,18 @@ function saveValue(state: IdsState, index: number, value: string): IdsState {
 }
 
 // Location 23 changing the code length resets the installer code (location 197) to the Table 12 default for the
-// new length. The manual only gives the defaults, so this reset is a ruling. Master and user codes are not touched here.
-function applyCodeLength(before: IdsState, after: IdsState): IdsState {
+// new length. The manual only gives the defaults, so this reset is a ruling.
+// User codes: "If the code length is changed from 6 to 4, then all user codes are automatically set to their default
+// values as per Table 12" (Location 23), so 6 → 4 leaves only slot 1 = 1234. Table 12 gives 123456 as the 6-digit master
+// default; the manual only gives defaults, so (ruling) 4 → 6 changes slot 1 only while it is still 1234 and keeps the rest.
+function applyCodeLength(before: IdsState, after: IdsState, model: PanelModelData): IdsState {
   const length = readCodeLength(after);
   if (length === readCodeLength(before)) return after;
-  const result: IdsState = { ...after, values: { ...after.values, [readValueKey(197, 0)]: INSTALLER_CODE_DEFAULTS[length] } };
+  const fourDigitMaster = readMasterDefault(model, 4);
+  const codes: Record<number, string> = length === 4 ? { 1: fourDigitMaster } : { ...after.codes };
+  if (length === 6 && codes[1] === fourDigitMaster) codes[1] = readMasterDefault(model, 6);
+  const values = { ...after.values, [readValueKey(197, 0)]: INSTALLER_CODE_DEFAULTS[length] };
+  const result: IdsState = { ...after, values, codes };
   return result;
 }
 
@@ -117,7 +126,7 @@ const HANDLERS: Partial<Record<Mode, Handler>> = {
     const allowed = VALID_VALUES[num];
     const valid = state.buffer.length === digits && (!allowed || allowed.includes(state.buffer));
     if (!valid) return { ...beepError(state), buffer: "" };
-    const result = openProgramTop(applyCodeLength(state, saveValue(state, 0, state.buffer)), model);
+    const result = openProgramTop(applyCodeLength(state, saveValue(state, 0, state.buffer), model), model);
     return result;
   },
 
@@ -152,12 +161,15 @@ const HANDLERS: Partial<Record<Mode, Handler>> = {
     const result: IdsState = { ...state, toggles, buffer: "" };
     return result;
   },
+
+  ...USER_HANDLERS,
 };
 
 export function pressKey(state: IdsState, key: Key, model: PanelModelData): IdsState {
   if (IGNORED_KEYS.has(key)) return state;
+  if (HOLD_KEYS.has(key)) return applyHoldKey(state, key);
   const handler = HANDLERS[state.mode];
-  const cleared: IdsState = { ...state, beep: null };
+  const cleared: IdsState = { ...state, beep: null, unsimulatedOption: null };
   const result = handler ? handler(cleared, key, model) : cleared;
   return result;
 }

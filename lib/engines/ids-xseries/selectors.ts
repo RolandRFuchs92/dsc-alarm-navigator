@@ -3,7 +3,9 @@
 import type { KeypadModelDef, PanelModelData, SectionDef } from "@/lib/content/types";
 import type { Display, Focus, LedState, Leds, Location, Worksheet } from "../types";
 import {
+  INSTALLER_CODE_DEFAULTS,
   LIGHTS_PER_PAGE,
+  readCodeLength,
   describeInstance,
   readEntries,
   readEntryDigits,
@@ -13,6 +15,7 @@ import {
   readWorksheet,
 } from "./state";
 import type { IdsState, Mode } from "./state";
+import { USER_OPTION_LABELS, isTypingCode, maskCode } from "./user-mode";
 
 /* ---------- status lights ---------- */
 
@@ -36,6 +39,12 @@ export function selectLeds(state: IdsState): Leds {
     location: buildLeds("on", "off", "flash"), // §8 standard location: READY solid, AWAY flashes
     zoneList: buildLeds("on", "flash", "flash"), // §8 extended location: READY solid, ARM and AWAY flash
     bitmap: buildLeds("on", "off", "flash"), // §8 bitmapped location: READY solid, AWAY flashes
+    userCode: buildLeds("alternate", "alternate", "off"), // user manual §9 step 3: ARM and READY alternate flashing
+    userTop: buildLeds("flash", "off", "off"), // §9 step 5: the READY LED will flash
+    // §9 options 0-4 step 3: READY and ARM flash; Options 1 and 3 step 5: READY and AWAY flash, ARM on.
+    userOption: state.userSlot === null ? buildLeds("flash", "flash", "off") : buildLeds("flash", "on", "flash"),
+    bypassCode: buildLeds("off", "off", "flash"), // user manual §5 step 2: the AWAY LED will flash
+    bypass: buildLeds("on", "off", "off"), // §5 step 4: the READY LED will come on
   };
   // Idle and code entry: standby, READY on with no zones open (§8 "the panel is now in standby mode").
   const result = byMode[state.mode] ?? buildLeds("on", "off", "off");
@@ -86,7 +95,15 @@ function computeZoneLights(state: IdsState, model: PanelModelData): { on: number
     const result = { on, verified: section.verified && !state.buffer };
     return result;
   }
-  // Idle shows zone status (no zone open); program-mode top shows nothing.
+  if (state.mode === "bypass") {
+    // User manual §5 steps 3 and 7: the bypassed zones' lights on this page.
+    const offset = (state.page - 1) * LIGHTS_PER_PAGE;
+    const on = state.bypassed.filter((n) => n > offset && n <= offset + LIGHTS_PER_PAGE).map((n) => n - offset);
+    const result = { on, verified: !state.buffer };
+    return result;
+  }
+  // Idle shows zone status (no zone open); program-mode top shows nothing. The user manual doesn't describe the zone
+  // lights in user program mode or while the bypass code is typed, so those are unverified.
   const result = { on: [], verified: (state.mode === "idle" || state.mode === "programTop") && !state.buffer };
   return result;
 }
@@ -113,26 +130,51 @@ function describeWaiting(state: IdsState, model: PanelModelData): string {
   const entries = section ? readEntries(section, num) : [];
   const zone = entries[state.entryIndex]?.label.replace(/ type$/, "") ?? "";
   const isLastZone = state.entryIndex === entries.length - 1;
+  const codeDigits = readCodeLength(state);
+  const unsimulated = state.unsimulatedOption === null ? "" : `Option ${state.unsimulatedOption}: this option isn't simulated yet. `;
   const views: Record<Mode, () => string> = {
     idle: () => "The keypad is idle. Press # then the installer code then * to enter program mode.",
-    installerCode: () => `Type the installer code (default ${model.installerCodeDefault}) then *. # cancels.`,
+    installerCode: () => `Type the installer code (default ${INSTALLER_CODE_DEFAULTS[readCodeLength(state)]}) then *. # cancels.`,
     programTop: () => "You are in program mode (READY flashing). Type a location number then *, or # to leave program mode.",
     location: () => `You are in ${name}. Type the new value (${entries[0] ? readEntryDigits(state, num, entries[0]) : 0} digits) then *, or # to leave it unchanged.`,
     zoneList: () => `You are in ${name}, on ${zone}. Type ${zone}'s type then *, or * to skip to the next zone. # goes back to the top.${isLastZone ? ` ${zone} is the last zone here: * stays on it.` : ""}`,
     bitmap: () => `You are in ${name}${state.pageCount > 1 ? `, page ${state.page} of ${state.pageCount}` : ""}. Type a light number (1-16) then * to switch it, * alone for the next page, # when done.`,
-    userCode: () => "",
-    userTop: () => "",
-    userOption: () => "",
-    bypassCode: () => "",
-    bypass: () => "",
+    userCode: () => `Type the master code (user code 1, ${codeDigits} digits) then *. # cancels.`,
+    userTop: () => `${unsimulated}You are in user program mode (READY flashing). Type an option number (0-4) then *, or # to leave.`,
+    userOption: () => describeUserOption(state, codeDigits),
+    bypassCode: () => `Type any user code (${codeDigits} digits) then * to open bypass. # cancels.`,
+    bypass: () => `You are in bypass, zones ${(state.page - 1) * LIGHTS_PER_PAGE + 1}-${state.page * LIGHTS_PER_PAGE}. Type a zone light number (1-16) then * to bypass or un-bypass it, * alone for the next 16 zones, # when done.`,
   };
   const result = views[state.mode]();
   return result;
 }
 
+// What each simulated option (user manual §9) waits for. Never includes a code.
+function describeUserOption(state: IdsState, codeDigits: number): string {
+  const name = `Option ${state.userOption} (${USER_OPTION_LABELS[state.userOption ?? -1]})`;
+  const firstStep: Record<number, string> = {
+    0: `type a new user code (${codeDigits} digits) then *`,
+    1: `type the old code to edit (${codeDigits} digits) then *`,
+    2: `type the user code to delete (${codeDigits} digits) then *`,
+    3: "type the slot number (1-128) then *",
+    4: "type the slot number to delete (1-128) then *",
+  };
+  const step = state.userSlot === null
+    ? firstStep[state.userOption ?? 0]
+    : `slot ${state.userSlot}: type the new code (${codeDigits} digits) then *`;
+  const result = `You are in ${name}: ${step}. # exits the option.`;
+  return result;
+}
+
 const PROGRAM_MODES: Mode[] = ["programTop", "location", "zoneList", "bitmap"];
+const USER_MODES: Mode[] = ["userCode", "userTop", "userOption"];
 
 function buildCrumbs(state: IdsState, model: PanelModelData): Location["crumbs"] {
+  if (USER_MODES.includes(state.mode)) {
+    const option = state.userOption === null ? [] : [{ label: `Option ${state.userOption}: ${USER_OPTION_LABELS[state.userOption]}`, target: null }];
+    return [{ label: "User program mode", target: null }, ...option];
+  }
+  if (state.mode === "bypassCode" || state.mode === "bypass") return [{ label: "Bypass", target: null }];
   if (!PROGRAM_MODES.includes(state.mode)) return [{ label: "Keypad", target: null }];
   const section = readSection(state, model);
   const crumbs: Location["crumbs"] = [{ label: "Program mode", target: null }];
@@ -155,13 +197,15 @@ export function selectLocation(state: IdsState, model: PanelModelData): Location
 
 export function selectFocus(state: IdsState, model: PanelModelData): Focus {
   const typing = state.mode === "location" || state.mode === "zoneList";
+  // User codes being typed show as dots, never digits (ruling).
+  const buffer = isTypingCode(state) ? maskCode(state.buffer) : state.buffer;
   // Digits typed but not saved yet, except the installer code being typed.
-  const pending = state.buffer && state.mode !== "installerCode" ? [{ key: state.buffer, label: "typing" }] : [];
+  const pending = buffer && state.mode !== "installerCode" ? [{ key: buffer, label: "typing" }] : [];
   const result: Focus = {
     nodeId: state.nodeId,
     mode: state.mode,
     entryIndex: typing ? state.entryIndex : null,
-    buffer: state.buffer,
+    buffer,
     trail: [...state.path, ...pending],
     isInstallerTop: state.mode === "programTop" || state.mode === "installerCode",
     beep: state.beep,

@@ -218,10 +218,11 @@ describe("IDS X-Series: keys and purity", () => {
     });
   });
 
-  it("hold* and hold9 leave the state unchanged for now (user program mode and bypass come later)", () => {
-    const idle = createIdle();
-    expect(engine.pressKey(idle, "hold*", model)).toEqual(idle);
-    expect(engine.pressKey(idle, "hold9", model)).toEqual(idle);
+  it("hold* and hold9 leave installer programming states unchanged (they only work from idle, see user-mode.test.ts)", () => {
+    states().filter((state) => state.mode !== "idle").forEach((state) => {
+      expect(engine.pressKey(state, "hold*", model)).toBe(state);
+      expect(engine.pressKey(state, "hold9", model)).toBe(state);
+    });
   });
 
   it("works on deep-frozen states", () => {

@@ -6,7 +6,7 @@ import { resolveRangeSection } from "@/lib/content/rules";
 import type { EntryDef, OptionDef, PanelModelData, SectionDef } from "@/lib/content/types";
 import type { Worksheet } from "../types";
 
-// userCode … bypass are reserved for user program mode (hold *) and bypass (hold 9), added later.
+// userCode … userOption: user program mode (hold *, user manual §9); bypassCode, bypass: hold 9 (user manual §5).
 export type Mode =
   | "idle" | "installerCode" | "programTop" | "location" | "zoneList" | "bitmap"
   | "userCode" | "userTop" | "userOption" | "bypassCode" | "bypass";
@@ -26,6 +26,12 @@ export type IdsState = {
   beep: Beep | null;
   values: Record<string, string>;
   toggles: Record<string, number[]>;
+  // User codes by slot (1-128), in memory only: never read from or written to a worksheet (ruling).
+  codes: Record<number, string>;
+  bypassed: number[]; // bypassed zones (user manual §5); not in the worksheet either
+  userOption: number | null; // the user program option open in userOption mode
+  userSlot: number | null; // Option 1's old code slot or Option 3's slot, once accepted (second step)
+  unsimulatedOption: number | null; // the option just refused because it isn't simulated
 };
 
 export const LIGHTS_PER_PAGE = 16;
@@ -50,13 +56,21 @@ export function createInitialState(model: PanelModelData, worksheet?: Worksheet)
     beep: null,
     values: { ...(worksheet?.values ?? {}) },
     toggles,
+    codes: {},
+    bypassed: [],
+    userOption: null,
+    userSlot: null,
+    unsimulatedOption: null,
   };
+  // Never seeded from the worksheet; slot 1 starts as the master code default for the code length.
+  result.codes = { 1: readMasterDefault(model, readCodeLength(result)) };
   return result;
 }
 
 export function resetToIdle(state: IdsState): IdsState {
   const result: IdsState = {
     ...state, mode: "idle", nodeId: null, location: null, entryIndex: 0, page: 1, pageCount: 1, buffer: "", hexNext: false, path: [],
+    userOption: null, userSlot: null,
   };
   return result;
 }
@@ -118,6 +132,14 @@ export function readCodeLength(state: IdsState): number {
 // Table 12: the installer code default for each code length. The manual only gives the defaults; ruling: changing
 // location 23 resets the installer code to the default for the new length.
 export const INSTALLER_CODE_DEFAULTS: Record<number, string> = { 4: "9999", 6: "999999" };
+
+// User manual §8 and Table 12: master code 1 defaults to 1234, or 123456 with 6-digit codes.
+const MASTER_CODE_SIX_DIGIT_DEFAULT = "123456";
+
+export function readMasterDefault(model: PanelModelData, length: number): string {
+  const result = length === 6 ? MASTER_CODE_SIX_DIGIT_DEFAULT : model.masterCodeDefault;
+  return result;
+}
 
 // Digits a standard location takes. Location 197 (installer code) follows the location 23 code length.
 export function readEntryDigits(state: IdsState, num: number, entry: EntryDef): number {
