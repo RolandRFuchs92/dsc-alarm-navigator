@@ -6,6 +6,7 @@ import {
   LIGHTS_PER_PAGE,
   describeInstance,
   readEntries,
+  readEntryDigits,
   readSection,
   readToggleSet,
   readValue,
@@ -86,7 +87,7 @@ function computeZoneLights(state: IdsState, model: PanelModelData): { on: number
     return result;
   }
   // Idle shows zone status (no zone open); program-mode top shows nothing.
-  const result = { on: [], verified: state.mode === "idle" || state.mode === "programTop" };
+  const result = { on: [], verified: (state.mode === "idle" || state.mode === "programTop") && !state.buffer };
   return result;
 }
 
@@ -116,7 +117,7 @@ function describeWaiting(state: IdsState, model: PanelModelData): string {
     idle: () => "The keypad is idle. Press # then the installer code then * to enter program mode.",
     installerCode: () => `Type the installer code (default ${model.installerCodeDefault}) then *. # cancels.`,
     programTop: () => "You are in program mode (READY flashing). Type a location number then *, or # to leave program mode.",
-    location: () => `You are in ${name}. Type the new value (${entries[0]?.digits ?? 0} digits) then *, or # to leave it unchanged.`,
+    location: () => `You are in ${name}. Type the new value (${entries[0] ? readEntryDigits(state, num, entries[0]) : 0} digits) then *, or # to leave it unchanged.`,
     zoneList: () => `You are in ${name}, on ${zone}. Type ${zone}'s type then *, or * to skip to the next zone. # goes back to the top.${isLastZone ? ` ${zone} is the last zone here: * stays on it.` : ""}`,
     bitmap: () => `You are in ${name}${state.pageCount > 1 ? `, page ${state.page} of ${state.pageCount}` : ""}. Type a light number (1-16) then * to switch it, * alone for the next page, # when done.`,
     userCode: () => "",

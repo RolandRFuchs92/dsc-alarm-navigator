@@ -51,7 +51,8 @@ describe("IDS X-Series: standard locations (installer manual §8, Location 23 an
   it("6 * saves 6 with a long beep and returns to the top", () => {
     const state = press(programTop(), "2 3 * 6 *");
     expect(focusOf(state)).toMatchObject({ mode: "programTop", beep: "long" });
-    expect(engine.selectWorksheet(state).values).toEqual({ "23||0": "6" });
+    // Changing the code length also resets the installer code to the Table 12 default (coordinator ruling).
+    expect(engine.selectWorksheet(state).values).toEqual({ "23||0": "6", "197||0": "999999" });
   });
 
   it("5 * in location 23 gives the error beep (only 4 or 6 are valid)", () => {
@@ -93,6 +94,34 @@ describe("IDS X-Series: standard locations (installer manual §8, Location 23 an
   it("mode followed by a digit above 5 gives the error beep", () => {
     const state = press(programTop(), "1 9 7 * 1 mode 7");
     expect(focusOf(state)).toMatchObject({ buffer: "1", beep: "error" });
+  });
+});
+
+describe("IDS X-Series: code length resets the installer code (Location 23, Table 12)", () => {
+  const sixDigits = () => press(programTop(), "2 3 * 6 * #");
+
+  it("after 2 3 * 6 *, 999999 enters program mode and 9999 errors", () => {
+    expect(focusOf(press(sixDigits(), "# 9 9 9 9 9 9 *")).mode).toBe("programTop");
+    expect(focusOf(press(sixDigits(), "# 9 9 9 9 *"))).toMatchObject({ mode: "idle", beep: "error" });
+  });
+
+  it("with 6-digit codes location 197 takes 6 digits and the new code works", () => {
+    const changed = press(sixDigits(), "# 9 9 9 9 9 9 * 1 9 7 * 1 2 3 4 5 6 *");
+    expect(focusOf(changed)).toMatchObject({ mode: "programTop", beep: "long" });
+    expect(engine.selectWorksheet(changed).values["197||0"]).toBe("123456");
+    expect(focusOf(press(changed, "# # 1 2 3 4 5 6 *")).mode).toBe("programTop");
+  });
+
+  it("switching back to 4 makes 9999 valid again", () => {
+    const back = press(sixDigits(), "# 9 9 9 9 9 9 * 2 3 * 4 * #");
+    expect(focusOf(press(back, "# 9 9 9 9 *")).mode).toBe("programTop");
+    // A 5th code digit is refused with the error beep (the buffer can't exceed the code length).
+    expect(focusOf(press(back, "# 9 9 9 9 9"))).toMatchObject({ mode: "installerCode", beep: "error", buffer: "9999" });
+  });
+
+  it("saving the same length leaves a changed installer code alone", () => {
+    const state = press(programTop(), "1 9 7 * 1 2 3 4 * 2 3 * 4 * #");
+    expect(focusOf(press(state, "# 1 2 3 4 *")).mode).toBe("programTop");
   });
 });
 

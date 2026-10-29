@@ -115,6 +115,16 @@ export function readCodeLength(state: IdsState): number {
   return result;
 }
 
+// Table 12: the installer code default for each code length. The manual only gives the defaults; ruling: changing
+// location 23 resets the installer code to the default for the new length.
+export const INSTALLER_CODE_DEFAULTS: Record<number, string> = { 4: "9999", 6: "999999" };
+
+// Digits a standard location takes. Location 197 (installer code) follows the location 23 code length.
+export function readEntryDigits(state: IdsState, num: number, entry: EntryDef): number {
+  const result = num === 197 ? readCodeLength(state) : entry.digits;
+  return result;
+}
+
 /* ---------- worksheet ---------- */
 
 // Same shape as the DSC worksheet keys: "<loc>|<sub>|<index>", with no sub-locations here.

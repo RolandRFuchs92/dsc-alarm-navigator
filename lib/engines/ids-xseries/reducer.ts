@@ -4,12 +4,14 @@ import type { PanelModelData } from "@/lib/content/types";
 import type { Key } from "../types";
 import {
   HEX_DIGITS,
+  INSTALLER_CODE_DEFAULTS,
   LIGHTS_PER_PAGE,
   findSection,
   flipNumber,
   openProgramTop,
   readCodeLength,
   readEntries,
+  readEntryDigits,
   readInstallerCode,
   readOptions,
   readSection,
@@ -69,6 +71,15 @@ function saveValue(state: IdsState, index: number, value: string): IdsState {
   return result;
 }
 
+// Location 23 changing the code length resets the installer code (location 197) to the Table 12 default for the
+// new length. The manual only gives the defaults, so this reset is a ruling. Master and user codes are not touched here.
+function applyCodeLength(before: IdsState, after: IdsState): IdsState {
+  const length = readCodeLength(after);
+  if (length === readCodeLength(before)) return after;
+  const result: IdsState = { ...after, values: { ...after.values, [readValueKey(197, 0)]: INSTALLER_CODE_DEFAULTS[length] } };
+  return result;
+}
+
 /* ---------- key handling, one function per mode ---------- */
 
 const HANDLERS: Partial<Record<Mode, Handler>> = {
@@ -98,15 +109,15 @@ const HANDLERS: Partial<Record<Mode, Handler>> = {
   location(state, key, model) {
     const section = readSection(state, model)!;
     const num = state.location ?? 0;
-    const entry = readEntries(section, num)[0];
+    const digits = readEntryDigits(state, num, readEntries(section, num)[0]);
     if (key === "#") return openProgramTop(state, model);
-    if (key === "mode") return state.buffer.length < entry.digits ? { ...state, hexNext: true } : beepError(state);
-    if (isDigit(key)) return typeDigit(state, key, entry.digits);
+    if (key === "mode") return state.buffer.length < digits ? { ...state, hexNext: true } : beepError(state);
+    if (isDigit(key)) return typeDigit(state, key, digits);
     if (key !== "*" || !state.buffer) return state;
     const allowed = VALID_VALUES[num];
-    const valid = state.buffer.length === entry.digits && (!allowed || allowed.includes(state.buffer));
+    const valid = state.buffer.length === digits && (!allowed || allowed.includes(state.buffer));
     if (!valid) return { ...beepError(state), buffer: "" };
-    const result = openProgramTop(saveValue(state, 0, state.buffer), model);
+    const result = openProgramTop(applyCodeLength(state, saveValue(state, 0, state.buffer)), model);
     return result;
   },
 

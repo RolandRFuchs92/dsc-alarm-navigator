@@ -33,6 +33,10 @@ describe("IDS X-Series status and zone lights", () => {
     expect(readVerified(state)).toBe(true);
   });
 
+  it("program mode while a location number is typed: unverified (§8 does not describe it)", () => {
+    expect(readVerified(press(programTop(), "2 3"))).toBe(false);
+  });
+
   it("standard location: READY on, AWAY flashes, the value in BCD (§8 Programming Standard Locations, Table 1)", () => {
     const state = press(programTop(), "2 3 *");
     expect(readLeds(state)).toEqual({ ready: "on", armed: "off", away: "flash", power: "on" });
