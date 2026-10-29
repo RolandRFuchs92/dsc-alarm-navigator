@@ -190,8 +190,12 @@ button, input, select { font: inherit; color: inherit; }
 .led.on.armed i { background: var(--led-armed); box-shadow: 0 0 8px var(--led-armed); }
 .led.on.trouble i { background: var(--led-trouble); box-shadow: 0 0 8px var(--led-trouble); }
 .led.on.ac i { background: var(--led-ready); box-shadow: 0 0 6px var(--led-ready); }
+.led.on.away i { background: var(--led-armed); box-shadow: 0 0 8px var(--led-armed); }
+.led.on.power i { background: var(--led-ready); box-shadow: 0 0 6px var(--led-ready); }
 .led.flash i { animation: blink 0.6s steps(1) infinite; }
 @keyframes blink { 50% { background: var(--led-off); box-shadow: none; } }
+/* alternate: the same blink shifted half a period (0.3s of 0.6s), so it is lit while the flashing lights are dark */
+.led.alternate i { animation: blink 0.6s steps(1) -0.3s infinite; }
 .lcd {
   background: var(--lcd); color: var(--lcd-ink); border-radius: 6px; padding: 10px 12px;
   font-family: var(--font-mono); font-size: 1.15rem; line-height: 1.35; letter-spacing: 0.06em;
@@ -277,7 +281,7 @@ td.num, th.num { font-family: var(--font-mono); font-variant-numeric: tabular-nu
   .panel { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .led.flash i, .keypad-host .lcd, .keypad-host .zone-panel, .zone-light.flash::before { animation: none !important; }
+  .led.flash i, .led.alternate i, .zone-light.alternate::before, .keypad-host .lcd, .keypad-host .zone-panel, .zone-light.flash::before { animation: none !important; }
 }
 .linklike {
   font-family: var(--font-mono); font-size: 0.86rem; border: 0; background: none; color: var(--accent); cursor: pointer; padding: 1px 2px; text-decoration: underline; text-underline-offset: 2px;
@@ -303,12 +307,25 @@ td.num .meaning { white-space: normal; font-family: var(--font-body); min-width:
 }
 .zone-light.on::before, .zone-light.flash::before { background: var(--led-zone); box-shadow: 0 0 8px var(--led-zone); }
 .zone-light.flash::before { animation: blink 0.6s steps(1) infinite; }
-.zone-light.on, .zone-light.flash { color: #e3e6e0; }
+.zone-light.alternate::before { background: var(--led-zone); box-shadow: 0 0 8px var(--led-zone); animation: blink 0.6s steps(1) -0.3s infinite; }
+.zone-light.on, .zone-light.flash, .zone-light.alternate { color: #e3e6e0; }
 .zone-panel .badge.unverified { position: absolute; top: -11px; right: 8px; }
 .keypad-host[data-beep="a"] .zone-panel { animation: zoneflash-a 0.25s linear 2; }
 .keypad-host[data-beep="b"] .zone-panel { animation: zoneflash-b 0.25s linear 2; }
 @keyframes zoneflash-a { 50% { background: #2b3133; } }
 @keyframes zoneflash-b { 50% { background: #2b3133; } }
+/* IDS Classic LED keypad: dark panel left (status lights, label, two columns of eight zone lights), keys right. */
+.keypad-ids .ids-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 12px; align-items: start; }
+.ids-panel { display: grid; gap: 10px; padding-top: 12px; }
+.ids-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.ids-label { margin: 0; text-align: center; }
+.ids-zones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.ids-zone-col { grid-template-columns: 1fr; gap: 8px; }
+.keypad-ids .keys { margin-top: 0; gap: 8px; }
+.ids-bottom { grid-column: 1 / -1; display: grid; grid-template-columns: 0.75fr 1fr 1fr 1fr; gap: 8px; }
+.ids-bottom button, .ids-mode { font-size: 0.8rem; }
+.ids-bottom button:disabled { opacity: 0.55; cursor: not-allowed; }
+.keys button.held { transform: translateY(2px); box-shadow: 0 1px 0 var(--key-shadow); outline: 2px solid var(--accent); }
 .badge.unverified { background: var(--accent-soft); color: var(--accent); }
 
 /* ---------- app pages: /devices, /devices/[model] ---------- */

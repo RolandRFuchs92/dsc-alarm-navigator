@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { Pk5500 } from "./Pk5500";
+import { IdsClassicLed } from "./IdsClassicLed";
 import { PkLed } from "./PkLed";
 import type { KeypadProps } from "./types";
 
@@ -7,6 +8,7 @@ import type { KeypadProps } from "./types";
 const KEYPADS: Record<string, ComponentType<KeypadProps>> = {
   pk5500: Pk5500,
   "pk-led": PkLed,
+  "ids-classic-led": IdsClassicLed,
 };
 
 export function getKeypadComponent(componentKey: string): ComponentType<KeypadProps> {

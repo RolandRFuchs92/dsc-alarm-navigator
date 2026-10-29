@@ -7,8 +7,8 @@ const LED_ORDER: Array<{ id: string; label: string }> = [
   { id: "ac", label: "AC" },
 ];
 
-function pickLedClass(id: string, state: LedState): string {
-  const result = `led ${id}${state === "off" ? "" : " on"}${state === "flash" ? " flash" : ""}`;
+export function pickLedClass(id: string, state: LedState): string {
+  const result = `led ${id}${state === "off" ? "" : " on"}${state === "flash" ? " flash" : ""}${state === "alternate" ? " alternate" : ""}`;
   return result;
 }
 
